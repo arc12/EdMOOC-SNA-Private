@@ -37,15 +37,6 @@ list.SELECT <- function(db, schemaIDs, sql, echo=FALSE, schemaPrefix="vpodata_")
    return(ret.list)
 }
 
-# Special case treatment of result of list.SELECT
-# if each list item is a 2 column result, transpose each and create a union set of column names
-# from what was the first row. What was the second column of each then becomes one of the rows in
-# what is returned from this function
-conform.list<-function(list.select){
-   
-   
-}
-
 ## ***Made available using the The MIT License (MIT)***
 #The MIT License (MIT)
 #Copyright (c) 2013 Adam Cooper, University of Bolton
