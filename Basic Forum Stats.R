@@ -64,6 +64,41 @@ posterRoles.df<- data.frame(posterRoles.mat)
 posterRoles.df[is.na(posterRoles.df)]<-0
 #colnames(posterRoles.df)<-paste("Role",seq(1,8),sep=".")
 colnames(posterRoles.df)<- dbGetQuery(db,"select name from vpodata_equinegen.access_groups WHERE id<10 ORDER BY ID")[,1]
+rownames(posterRoles.df)<-names(posterRoles)
+
+## @knitr POSTER_DISTRIBUTION
+# how many posts per person (excludes people who never posted
+# students
+posterDistS.sql<-"SELECT fp.forum_user_id, COUNT(fp.forum_user_id) posts
+   FROM **for.forum_posts fp, **map.hash_mapping m, **gen.users u
+   WHERE fp.forum_user_id = m.forum_user_id AND m.anon_user_id = u.anon_user_id
+      AND fp.deleted=0 AND fp.is_spam=0 AND u.access_group_id = 4
+         GROUP BY fp.forum_user_id"
+# teaching staff (incl instructor)
+posterDistT.sql<-"SELECT fp.forum_user_id, COUNT(fp.forum_user_id) posts
+   FROM **for.forum_posts fp, **map.hash_mapping m, **gen.users u
+   WHERE fp.forum_user_id = m.forum_user_id AND m.anon_user_id = u.anon_user_id
+      AND fp.deleted=0 AND fp.is_spam=0 AND u.access_group_id IN (2,3)
+         GROUP BY fp.forum_user_id"
+posterDistS<-list.SELECT(db, courseIDs, posterDistS.sql, echo=echo.sql)
+posterDistT<-list.SELECT(db, courseIDs, posterDistT.sql, echo=echo.sql)
+
+## @knitr COMMENTER_DISTRIBUTION
+# how many comments per person (excludes people who never commented
+# students
+commenterDistS.sql<-"SELECT fc.forum_user_id, COUNT(fc.forum_user_id) comments
+   FROM  **for.forum_comments fc, **map.hash_mapping m, **gen.users u
+   WHERE fc.forum_user_id = m.forum_user_id AND m.anon_user_id = u.anon_user_id
+        AND fc.deleted=0 AND fc.is_spam=0 AND u.access_group_id =4
+            GROUP BY fc.forum_user_id"
+# teaching staff (incl instructor)
+commenterDistT.sql<-"SELECT fc.forum_user_id, COUNT(fc.forum_user_id) comments
+   FROM  **for.forum_comments fc, **map.hash_mapping m, **gen.users u
+   WHERE fc.forum_user_id = m.forum_user_id AND m.anon_user_id = u.anon_user_id
+        AND fc.deleted=0 AND fc.is_spam=0 AND u.access_group_id IN (2,3)
+            GROUP BY fc.forum_user_id"
+commenterDistS<-list.SELECT(db, courseIDs, commenterDistS.sql, echo=echo.sql)
+commenterDistT<-list.SELECT(db, courseIDs, commenterDistT.sql, echo=echo.sql)
 
 ## @knitr FORUM_DISTRIBUTION
 # 1. post_commentDist.sql creates a compact summary but it isn't helpful for further processing
@@ -89,7 +124,9 @@ post_commentDist2<-list.SELECT(db, courseIDs, post_commentDist2.sql, echo=echo.s
 name<-"Basic Forum Stats"
 fname<-paste(name, ".RData", sep="")
 metadata<-list(project=basename(getwd()), origin=name, created=date())
-save(list=c("forumCount.df","threadCount.df","postCount.df","commentCount.df"),
+save(list=c("forumCount.df","threadCount.df","postCount.df","commentCount.df","bushiness.df",
+            "posterRoles.df","posterDistS","posterDistT","commenterDistS","commenterDistT",
+            "post_commentDist","post_commentDist2"),
      file=fname)
 cat(paste("Saved to",fname,"\r\n"))
 
