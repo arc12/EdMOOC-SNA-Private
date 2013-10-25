@@ -11,14 +11,14 @@
 ## @knitr INIT
 
 #establish connection to MySQL, loading library. contains coursera DB exports from 2013
-source("./dbConnect.R")
+source("../dbConnect.R")
 #helper functions
-source("./helpers.R")
+source("../helpers.R")
 
 ## For all SQL here. The wildcard ** is for replacement by vpodata_equine etc.
 
 ## @knitr ACCESSED
-accessed.sql <- "SELECT count(1) registered, sum(last_access_time >0) accessed FROM **gen.users"
+accessed.sql <- "SELECT count(1) registered, sum(last_access_time >0) accessed FROM **gen.users WHERE access_group_id=4"
 accessed.df<-tabular.SELECT(db, courseIDs, accessed.sql, echo=echo.sql)
 
 ## @knitr FORUM_COUNT
@@ -119,16 +119,19 @@ post_commentDist2.sql <- "SELECT fp.id post_id, count(fc.id) comments from **for
     **for.forum_comments fc WHERE fc.post_id = fp.id GROUP BY fp.id"
 post_commentDist2<-list.SELECT(db, courseIDs, post_commentDist2.sql, echo=echo.sql)
    
-## @knitr STORE
+## @knitr EXIT
 # saves useful data
 name<-"Basic Forum Stats"
 fname<-paste(name, ".RData", sep="")
 metadata<-list(project=basename(getwd()), origin=name, created=date())
-save(list=c("forumCount.df","threadCount.df","postCount.df","commentCount.df","bushiness.df",
+save(list=c("accessed.df",
+            "forumCount.df","threadCount.df","postCount.df","commentCount.df","bushiness.df",
             "posterRoles.df","posterDistS","posterDistT","commenterDistS","commenterDistT",
             "post_commentDist","post_commentDist2"),
      file=fname)
 cat(paste("Saved to",fname,"\r\n"))
+#end tidily
+dbDisconnect(db)
 
 ## ***Made available using the The MIT License (MIT)***
 #The MIT License (MIT)

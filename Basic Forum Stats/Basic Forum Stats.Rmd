@@ -2,11 +2,11 @@ Basic Forum Stats
 ========================================================
 
 ```{r echo=FALSE, results='hide'}
-courseIDs<-c("aiplan","astro","crit","equine")
+courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
 echo.sql<-TRUE # echo SQL statements
 echo.flag<-TRUE #echo R source
-fig.width.default<-7
-fig.height.default<-7
+fig.width.default<-5
+fig.height.default<-5
 options(knitr.table.format = 'markdown')
 read_chunk("./Basic Forum Stats.R")
 ```
@@ -15,7 +15,7 @@ read_chunk("./Basic Forum Stats.R")
 #initialises the DB and sources helper.
 ```
 
-Quantify users vs registrations.
+Quantify users vs registrations with "Student" role (access_group_id=4).
 ```{r ACCESSED, echo=FALSE}
 ```
 ```{r echo=FALSE, results='asis'}
@@ -70,6 +70,71 @@ kable(posterRoles.df, row.names=T, align=rep("c", length(colnames(posterRoles.df
 ```
 *role names are assumed to be the same for the same id across courses*
 
+For the student role, what fraction of the registered students who logged in at least once does this represent?
+```{r echo=echo.flag}
+#data frame rows will be in same order as schemaIDs
+stuPostFrac<-t(posterRoles.df[,"Student"]/accessed.df[,"accessed"])
+colnames(stuPostFrac)<-row.names(posterRoles.df)
+```
+```{r echo=FALSE, results='asis',}
+kable(stuPostFrac, row.names=T)
+```
+
+Distribution of No. of Posts Per Person
+----------
+What is the distribution of the number of people making 1,2,... posts?
+*Non-posters are excluded*
+```{r POSTER_DISTRIBUTION, echo=FALSE}
+```
+
+### Students (access_group_id=4)
+
+```{r echo=echo.flag, fig.width=fig.width.default, fig.height=fig.height.default}
+# remove cases where no of posts >20 to simplify plotting
+for(i in 1:length(posterDistS)){
+   posterDistSa<-posterDistS[[i]][posterDistS[[i]]$posts<=20,"posts"]
+   cut.posters<-length(posterDistS[[i]]$posts[posterDistS[[i]]$posts>20])
+   hist(posterDistSa, main=names(posterDistS)[i], xlab="No. of Posts", ylab="No. of People", sub=paste(cut.posters,"posters with >20 posts"), breaks=20)
+}
+```
+
+I suspect that there are quite a few 1-post people due to a different mechanism - e.g. "introduce yourself" - compared to people who actually used the forums for a purpose. Hence if we wanted to compare distributions between courses we should probably cut 1 (or even 1-2) posters.
+
+### Teaching Staff (access_group_id IN (2,3))
+
+```{r echo=echo.flag, fig.width=fig.width.default, fig.height=fig.height.default}
+
+for(i in 1:length(posterDistT)){
+   hist(posterDistT[[i]]$posts, main=names(posterDistT)[i], xlab="No. of Posts", ylab="No. of People")
+}
+```
+
+Distribution of No. of Comments Per Person
+----------
+What is the distribution of the number of people making 1,2,... comments?
+*Non-commenters are excluded*
+```{r COMMENTER_DISTRIBUTION, echo=FALSE}
+```
+
+### Students (access_group_id=4)
+
+```{r echo=echo.flag, fig.width=fig.width.default, fig.height=fig.height.default}
+# remove cases where no of posts >20 to simplify plotting
+for(i in 1:length(posterDistS)){
+   commenterDistSa<-commenterDistS[[i]][commenterDistS[[i]]$comments<=15,"comments"]
+   cut.commenters<-length(commenterDistS[[i]]$comments[commenterDistS[[i]]$comments>15])
+   hist(commenterDistSa, main=names(commenterDistS)[i], xlab="No. of Comments", ylab="No. of People", sub=paste(cut.commenters,"people with >15 comments"), breaks=15)
+}
+```
+
+### Teaching Staff (access_group_id IN (2,3))
+
+```{r echo=echo.flag, fig.width=fig.width.default, fig.height=fig.height.default}
+for(i in 1:length(posterDistT)){
+   hist(commenterDistT[[i]]$comments, main=names(commenterDistT)[i], xlab="No. of Comments", ylab="No. of People")
+}
+```
+
 Density comments on posts (etc), compare distributions
 -----------
 
@@ -104,7 +169,9 @@ for(i in 1:length(post_commentDist2)){
 ```
 
 
-
+```{r EXIT, echo=FALSE}
+#saves extracted data to an RData file and closes DB connection
+```
 ```{r echo=FALSE}
 ## ****************************************************
 ## Created: Adam Cooper, Cetis, Oct 2013
