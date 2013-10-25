@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+<title>Dark Users</title>
+
+
+
+
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {   
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+</style>
+
+
+
+</head>
+
+<body>
+<h1>Dark Users</h1>
+
+<p>Quantify the extent to which user identifiers left in activity traces (forums so far) do not appear in the hash_mapping and users tables. Main upshot is that we lack user attributes, although we could probably assume the dark users are withdrawn students and so impute access_group_id=4 without much error.</p>
+
+<p>**gen.users and **map.hash_mapping are believed to correspond 1:1</p>
+
+<p>The following considers forum_user_ids in threads, posts and comments. &ldquo;Including dark&rdquo; counts forum users as identified in the forum-specific tables, whereas &ldquo;excluding dark&rdquo; only counts those users with their forum_user_id also found in the hash_mapping table.</p>
+
+<pre><code>## Loading required package: DBI
+</code></pre>
+
+<pre><code>## SELECT count(1) including_dark FROM (
+##     (SELECT DISTINCT fp.forum_user_id from vpodata_aiplanfor.forum_posts fp)
+##     UNION DISTINCT
+##     (SELECT DISTINCT fc.forum_user_id from vpodata_aiplanfor.forum_comments fc)
+##     UNION DISTINCT
+##     (SELECT DISTINCT ft.forum_user_id from vpodata_aiplanfor.forum_threads ft) ) i
+</code></pre>
+
+<pre><code>## SELECT count(1) excluding_dark FROM (
+##     (SELECT DISTINCT fp.forum_user_id from vpodata_aiplanfor.forum_posts fp, vpodata_aiplanmap.hash_mapping m
+##         WHERE fp.forum_user_id = m.forum_user_id)
+##     UNION DISTINCT
+##     (SELECT DISTINCT fc.forum_user_id from vpodata_aiplanfor.forum_comments fc, vpodata_aiplanmap.hash_mapping m
+##         WHERE fc.forum_user_id = m.forum_user_id)
+##     UNION DISTINCT
+##     (SELECT DISTINCT ft.forum_user_id from vpodata_aiplanfor.forum_threads ft, vpodata_aiplanmap.hash_mapping m
+##         WHERE ft.forum_user_id = m.forum_user_id) ) i
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left">id</th>
+<th align="center">including_dark</th>
+<th align="center">excluding_dark</th>
+<th align="center">percent_lost</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">aiplan</td>
+<td align="center">670</td>
+<td align="center">499</td>
+<td align="center">26</td>
+</tr>
+<tr>
+<td align="left">astro</td>
+<td align="center">4398</td>
+<td align="center">3889</td>
+<td align="center">12</td>
+</tr>
+<tr>
+<td align="left">crit</td>
+<td align="center">5139</td>
+<td align="center">4688</td>
+<td align="center">9</td>
+</tr>
+<tr>
+<td align="left">edc</td>
+<td align="center">2941</td>
+<td align="center">2544</td>
+<td align="center">13</td>
+</tr>
+<tr>
+<td align="left">equine</td>
+<td align="center">6412</td>
+<td align="center">6244</td>
+<td align="center">3</td>
+</tr>
+<tr>
+<td align="left">intro</td>
+<td align="center">8145</td>
+<td align="center">6989</td>
+<td align="center">14</td>
+</tr>
+</tbody></table>
+
+</body>
+
+</html>

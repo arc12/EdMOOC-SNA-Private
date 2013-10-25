@@ -1,0 +1,42 @@
+Dark Users
+========================================================
+
+Quantify the extent to which user identifiers left in activity traces (forums so far) do not appear in the hash_mapping and users tables. Main upshot is that we lack user attributes, although we could probably assume the dark users are withdrawn students and so impute access_group_id=4 without much error.
+
+**gen.users and **map.hash_mapping are believed to correspond 1:1
+
+The following considers forum_user_ids in threads, posts and comments. "Including dark" counts forum users as identified in the forum-specific tables, whereas "excluding dark" only counts those users with their forum_user_id also found in the hash_mapping table.
+
+```{r echo=FALSE}
+courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+echo.sql<-TRUE # echo SQL statements
+#establish connection to MySQL, loading library. contains coursera DB exports from 2013
+source("../dbConnect.R")
+#helper functions
+source("../helpers.R")
+
+includingDark.sql<-"SELECT count(1) including_dark FROM (
+    (SELECT DISTINCT fp.forum_user_id from **for.forum_posts fp)
+    UNION DISTINCT
+    (SELECT DISTINCT fc.forum_user_id from **for.forum_comments fc)
+    UNION DISTINCT
+    (SELECT DISTINCT ft.forum_user_id from **for.forum_threads ft) ) i"
+excludingDark.sql<-"SELECT count(1) excluding_dark FROM (
+    (SELECT DISTINCT fp.forum_user_id from **for.forum_posts fp, **map.hash_mapping m
+        WHERE fp.forum_user_id = m.forum_user_id)
+    UNION DISTINCT
+    (SELECT DISTINCT fc.forum_user_id from **for.forum_comments fc, **map.hash_mapping m
+        WHERE fc.forum_user_id = m.forum_user_id)
+    UNION DISTINCT
+    (SELECT DISTINCT ft.forum_user_id from **for.forum_threads ft, **map.hash_mapping m
+        WHERE ft.forum_user_id = m.forum_user_id) ) i"
+forumsDark.df<-tabular.SELECT(db, courseIDs, includingDark.sql, echo=echo.sql)
+forumsDark.df<-cbind(forumsDark.df,tabular.SELECT(db, courseIDs, excludingDark.sql, echo=echo.sql))
+pc.df<-data.frame(percent_lost=100-round(100*forumsDark.df[,"excluding_dark"]/forumsDark.df[,"including_dark"]))
+forumsDark.df<-cbind(forumsDark.df,pc.df)
+```
+
+```{r echo=FALSE, results='asis'}
+kable(forumsDark.df, row.names=T, align=rep('c',3))
+```
+
