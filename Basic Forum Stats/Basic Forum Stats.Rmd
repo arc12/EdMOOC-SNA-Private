@@ -30,8 +30,10 @@ barplot(rbind(accessed=accessed.proportions, no.show=1-accessed.proportions), ma
 
 ```
 
+
 Qty of forums, threads, posts, comments
 -----------
+
 ```{r FORUM_COUNT, echo=FALSE}
 ```
 ### Forums
@@ -47,11 +49,15 @@ kable(forumCount.df, row.names=T, align=rep("c", length(colnames(forumCount.df))
 kable(threadCount.df, row.names=T, align=rep("c", length(colnames(threadCount.df))))
 ```
 
+This does not count threads in a deleted parent forum as being deleted threads.
+
 ### Posts
 
 ```{r echo=FALSE, results='asis'}
 kable(postCount.df, row.names=T, align=rep("c", length(colnames(postCount.df))))
 ```
+
+This does not count posts in a deleted parent thread as being deleted posts.
 
 ### Comments
 
@@ -59,6 +65,33 @@ kable(postCount.df, row.names=T, align=rep("c", length(colnames(postCount.df))))
 kable(commentCount.df, row.names=T, align=rep("c", length(colnames(commentCount.df))))
 ```
 
+This does not count comments in a deleted parent posts as being deleted comments.
+
+### Orphan Posts and Comments
+
+Orphan posts are posts with thread or forum parents that are deleted (and the post is not also deleted).
+Orphan comments are similarly defined, with "orphan comments (parent)" counting comments whose parent post is deleted whereas "orphan comments" are those missing an ancestor going back up to the forum level.
+
+```{r FORUM_ORPHANS, echo=FALSE}
+```
+```{r echo=FALSE, results='asis'}
+kable(orphans.df, row.names=T, align=rep("c", length(colnames(commentCount.df))))
+```
+
+What are Forums For? Also Thread-count and and Timing
+-------------
+```{r FORUM_TOP_STRUCT, echo=FALSE}
+```
+```{r echo=FALSE, results='asis'}
+
+for(i in 1:length(forumTopStruct)){
+   cat(paste("### ",courseIDs[i],"\r\n\r\n"))
+   kable(forumTopStruct[[i]], row.names=F, align=rep("c", length(colnames(commentCount.df))))
+}
+
+```
+
+Deleted forums are excluded. In practice, these are all threadless, except 1 case in aiplan with 1 thread.
 
 No of posters by role
 -------------
@@ -69,6 +102,8 @@ No of posters by role
 kable(posterRoles.df, row.names=T, align=rep("c", length(colnames(posterRoles.df))))
 ```
 *role names are assumed to be the same for the same id across courses*
+
+Deleted posts and posts in deleted threads or forums are not counted. Not counting posters to deleted forums or threads reduces the count by up to around 1%.
 
 For the student role, what fraction of the registered students who logged in at least once does this represent?
 ```{r echo=echo.flag}
@@ -82,7 +117,8 @@ kable(stuPostFrac, row.names=T)
 
 Distribution of No. of Posts Per Person
 ----------
-What is the distribution of the number of people making 1,2,... posts?
+What is the distribution of the number of people making 1,2,... posts? Deleted posts and posts to deleted threads/forums are excluded. This is probably of little consequence, but there may be cases of tutors posting tests or other aftermath posts with no relevance to the student's experience.
+
 *Non-posters are excluded*
 ```{r POSTER_DISTRIBUTION, echo=FALSE}
 ```
@@ -98,7 +134,7 @@ for(i in 1:length(posterDistS)){
 }
 ```
 
-I suspect that there are quite a few 1-post people due to a different mechanism - e.g. "introduce yourself" - compared to people who actually used the forums for a purpose. Hence if we wanted to compare distributions between courses we should probably cut 1 (or even 1-2) posters.
+I suspect that there are quite a few 1-post people due to a different mechanism - e.g. "introduce yourself" - compared to people who actually used the forums for a purpose. Hence if we wanted to compare distributions between courses we should probably cut 1 (or even 1-2) posters. These should appear (mostly) in 1 forum of thread, so could be eliminated if forum/thread titles inspected. Alt, if mixed in, could estimate % by sampling and manual classification.
 
 ### Teaching Staff (access_group_id IN (2,3))
 
@@ -111,7 +147,8 @@ for(i in 1:length(posterDistT)){
 
 Distribution of No. of Comments Per Person
 ----------
-What is the distribution of the number of people making 1,2,... comments?
+What is the distribution of the number of people making 1,2,... comments? Comments on deleted posts *are* counted this time since they probably do represent something meaningful about the students' experience of the course.
+
 *Non-commenters are excluded*
 ```{r COMMENTER_DISTRIBUTION, echo=FALSE}
 ```
@@ -138,17 +175,21 @@ for(i in 1:length(posterDistT)){
 Density comments on posts (etc), compare distributions
 -----------
 
-**At present these do not exclude deleted or spam**
-
 ### Bushiness Factors
 
-Compute the degree - i.e. the average number of "child" entities per parent - to which forums, threads, post and comments branch.
+```{r FORUM_BUSHINESS, echo=FALSE}
+```
+Compute the degree - i.e. the average number of "child" entities per parent - to which forums, threads, post and comments branch. The root forum (with parent=-1) is not counted. Deleted entities and entities with deleted ancestors are not counted. Note that some course have forums containing forums, and threads in both levels of forum. This relationship between forums is ignored; each forum is counted as "1".
+
+Excluding deletions makes <10% difference to post and comment bushiness but changes thread bushiness by several tens of % since some course data has a lot of forum deletion.
 
 ```{r echo=FALSE, results='asis'}
 kable(bushiness.df, row.names=T, align=rep("c", length(colnames(commentCount.df))))
 ```
 
 ### Distribution of Comments on Posts
+
+Comments on deleted posts are not included. This does make a visible difference to the following bar plot some courses, notably "aiplan", for which the proportion of no-comment posts drops by around 3%. 
 
 ```{r FORUM_DISTRIBUTION, echo=FALSE}
 ```
