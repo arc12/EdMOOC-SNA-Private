@@ -1,0 +1,123 @@
+## ****************************************************
+## Created: Adam Cooper, Cetis, Oct 2013
+## This source code was produced for The University of
+## Edinburgh DEI as part of their MOOC initiative.
+## Exctracts edge and node data according to rules for
+## what constitutes a tie and saves to graphml and
+## RData containing a network class object
+## ****************************************************
+
+
+library("igraph")
+#establish connection to MySQL, loading library. contains coursera DB exports from 2013
+source("./dbConnect.R")
+#helper functions
+source("./helpers.R")
+
+courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+echo.sql<-TRUE # echo SQL statements
+store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to store the extracted network to
+do.plot<-F
+
+## For all SQL here. The wildcard ** is for replacement by vpodata_equine etc.
+
+# edges = comment-on-post relationship, nodes = user (person)
+# edges use forum_user_id
+# edges includes users that have been deleted (have no hash-mapping entry)
+# if I try to join to mapping from both fc and fp to exclude them, execution time is excessive. Not sure why.
+edgeList.sql <-"SELECT fc.forum_user_id commenter, fp.forum_user_id poster, count(fc.id) weight
+   FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp
+      WHERE fc.post_id = fp.id
+         GROUP BY fc.forum_user_id, fp.forum_user_id
+            ORDER by fc.forum_user_id"
+# Use a union of poster and commenter ids to identify nodes.
+nodeList.sql <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
+   FROM vpodata_astrogen.users u, vpodata_astromap.hash_mapping m,
+      ((SELECT m.anon_user_id FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp,
+         vpodata_astromap.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id)
+      UNION DISTINCT
+       (SELECT m.anon_user_id FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp,
+         vpodata_astromap.hash_mapping m WHERE fc.post_id = fp.id AND fp.forum_user_id = m.forum_user_id)) i
+   WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
+
+edgeList<-list.SELECT(db, courseIDs, edgeList.sql, echo=echo.sql)
+nodeList<-list.SELECT(db, courseIDs, nodeList.sql, echo=echo.sql)
+
+#Iterate over the course-level list for some cleaning
+for(i in 1:length(courseIDs)){
+   edgeList1<-edgeList[[i]]
+   nodeList1<-nodeList[[i]]
+   #remove edges for nodes that cannot be found (i.e. withdrawn people)
+   edgeList1<-edgeList1[edgeList1$commenter %in% nodeList1$forum_user_id,] #missing commenter
+   edgeList[[i]]<-edgeList1[edgeList1$poster %in% nodeList1$forum_user_id,] #missing poster
+}
+
+# temporarily load igraph to write out the network as graphml
+library("igraph")
+for(i in 1:length(courseIDs)){
+   edgeList1<-edgeList[[i]]
+   nodeList1<-nodeList[[i]]
+   igraph1<- graph.data.frame(edgeList1, directed=TRUE, vertices=nodeList1[,c("forum_user_id","role")])
+   write.graph(igraph1,paste(store.dir,"P-C ", courseIDs[i],".graphml",sep=""), format="graphml")
+}
+
+#igraph and network packages conflict
+detach("package:igraph")
+library("network")
+
+#Iterate over the course-level list to create "network" data structures for ergm
+for(i in 1:length(courseIDs)){
+   edgeList1<-edgeList[[i]]
+   nodeList1<-nodeList[[i]]
+   ## build network object, nodes first
+   # initialise an empty network with the right number of vertices
+   net1<-network.initialize(length(nodeList1[,1]), directed=TRUE, hyper=FALSE, loops=FALSE, multiple=FALSE)
+   # add role attribute to the vertices
+   set.vertex.attribute(net1, "role", as.character(nodeList1[,"role"]))
+   network.vertex.names(net1)<-as.character(nodeList1$forum_user_id)
+   # add edges, noting that the matrix supplied to network.edgelist() must contain the index numbers of
+   # the already-created vertices and NOT the node identifiers in nodeList1.
+   # Hence some look-ups are needed
+   senders<-match(edgeList1$commenter,nodeList1$forum_user_id)
+   receivers<-match(edgeList1$poster,nodeList1$forum_user_id)
+   edge.mat<-cbind(senders,receivers)
+   network.edgelist(edge.mat, net1)
+
+   # saves network object
+   name<-"Poster-Commenter"
+   fname<-paste(store.dir,"P-C ", courseIDs[i], ".RData", sep="")
+   metadata<-list(project=basename(getwd()), origin=name, created=date())
+   save(list=c("net1","edgeList","nodeList"), file=fname)
+   cat(paste("Saved to",fname,"\r\n"))
+   
+   if(do.plot){
+      plot(net1)
+   }
+   
+}
+
+   
+#end tidily
+dbDisconnect(db)
+
+## ***Made available using the The MIT License (MIT)***
+#The MIT License (MIT)
+#Copyright (c) 2013 Adam Cooper, University of Bolton
+#
+#Permission is hereby granted, free of charge, to any person obtaining a copy of
+#this software and associated documentation files (the "Software"), to deal in
+# the Software without restriction, including without limitation the rights to
+# use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+# the Software, and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#    
+#    The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+# FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+# IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+## ************ end licence ***************
