@@ -30,6 +30,11 @@ Contains code to build networks based on different assumptions of what a tie is.
 ### Poster-Commenter Network
 The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster.
 
+Describe Net
+------------
+
+Network level summary statistics
+
 ERGM Models
 --------------------
 
