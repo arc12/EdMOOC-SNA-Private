@@ -23,21 +23,21 @@ do.plot<-F
 
 # edges = comment-on-post relationship, nodes = user (person)
 # edges use forum_user_id
-# edges includes users that have been deleted (have no hash-mapping entry)
+# edges includes users that have been deleted (no hash-mapping entry) hence do not have the corresponding node
 # if I try to join to mapping from both fc and fp to exclude them, execution time is excessive. Not sure why.
 edgeList.sql <-"SELECT fc.forum_user_id commenter, fp.forum_user_id poster, count(fc.id) weight
-   FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp
+   FROM **for.forum_comments fc, **for.forum_posts fp
       WHERE fc.post_id = fp.id
          GROUP BY fc.forum_user_id, fp.forum_user_id
             ORDER by fc.forum_user_id"
 # Use a union of poster and commenter ids to identify nodes.
 nodeList.sql <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
-   FROM vpodata_astrogen.users u, vpodata_astromap.hash_mapping m,
-      ((SELECT m.anon_user_id FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp,
-         vpodata_astromap.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id)
+   FROM **gen.users u, **map.hash_mapping m,
+      ((SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
+         **map.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id)
       UNION DISTINCT
-       (SELECT m.anon_user_id FROM vpodata_astrofor.forum_comments fc, vpodata_astrofor.forum_posts fp,
-         vpodata_astromap.hash_mapping m WHERE fc.post_id = fp.id AND fp.forum_user_id = m.forum_user_id)) i
+       (SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
+         **map.hash_mapping m WHERE fc.post_id = fp.id AND fp.forum_user_id = m.forum_user_id)) i
    WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
 
 edgeList<-list.SELECT(db, courseIDs, edgeList.sql, echo=echo.sql)
@@ -70,9 +70,10 @@ for(i in 1:length(courseIDs)){
    edgeList1<-edgeList[[i]]
    nodeList1<-nodeList[[i]]
    ## build network object, nodes first
-   # initialise an empty network with the right number of vertices
+   # initialise an empty network with the right number of vertices. Loop edges are not permitted.
    net1<-network.initialize(length(nodeList1[,1]), directed=TRUE, hyper=FALSE, loops=FALSE, multiple=FALSE)
    # add role attribute to the vertices
+   set.vertex.attribute(net1, "anon_user_id", as.character(nodeList1[,"anon_user_id"]))
    set.vertex.attribute(net1, "role", as.character(nodeList1[,"role"]))
    network.vertex.names(net1)<-as.character(nodeList1$forum_user_id)
    # add edges, noting that the matrix supplied to network.edgelist() must contain the index numbers of
@@ -85,9 +86,11 @@ for(i in 1:length(courseIDs)){
 
    # saves network object
    name<-"Poster-Commenter"
+   notes<-"net1 contains a network package object. *list1 contain separate edge and node data frames. 
+            net1 does not allow loops and has binary edges but *list1 may have loops and has edge weights"
    fname<-paste(store.dir,"P-C ", courseIDs[i], ".RData", sep="")
-   metadata<-list(project=basename(getwd()), origin=name, created=date())
-   save(list=c("net1","edgeList","nodeList"), file=fname)
+   metadata<-list(project=basename(getwd()), origin=name, created=date(), notes=notes)
+   save(list=c("metadata","net1","edgeList1","nodeList1"), file=fname)
    cat(paste("Saved to",fname,"\r\n"))
    
    if(do.plot){
