@@ -35,6 +35,13 @@ Describe Net
 
 Network level summary statistics
 
+Top Subnets
+-----------
+
+Extract and visualise subnets defined by the highest individual-level network statistics.
+
+Currently only in/out degree (and for P-C networks)
+
 ERGM Models
 --------------------
 
