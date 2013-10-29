@@ -31,13 +31,15 @@ edgeList.sql <-"SELECT fc.forum_user_id commenter, fp.forum_user_id poster, coun
          GROUP BY fc.forum_user_id, fp.forum_user_id
             ORDER by fc.forum_user_id"
 # Use a union of poster and commenter ids to identify nodes.
+# note that the 2nd select in the union does not contain "fc.post_id = fp.id AND", hence will include isolates
+#                          (posters who got no comments)
 nodeList.sql <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
    FROM **gen.users u, **map.hash_mapping m,
       ((SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
          **map.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id)
       UNION DISTINCT
-       (SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
-         **map.hash_mapping m WHERE fc.post_id = fp.id AND fp.forum_user_id = m.forum_user_id)) i
+       (SELECT m.anon_user_id FROM **for.forum_posts fp, **map.hash_mapping m
+         WHERE fp.forum_user_id = m.forum_user_id)) i
    WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
 
 edgeList<-list.SELECT(db, courseIDs, edgeList.sql, echo=echo.sql)
