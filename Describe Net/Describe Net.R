@@ -31,7 +31,7 @@ for(i in 1:length(courseIDs)){
    one.row<-singles.df[[1]]
    one.row[1]<-vcount(igraphList[[i]])
    one.row[2]<-ecount(igraphList[[i]])
-   one.row[3]<-graph.density(igraphList[[i]], loops=FALSE)
+   one.row[3]<-1000*graph.density(igraphList[[i]], loops=FALSE)
    dyads<-dyad.census(igraphList[[i]])
    one.row[4]<-dyads$mut
    one.row[5]<-dyads$asym
@@ -42,7 +42,7 @@ for(i in 1:length(courseIDs)){
    singles.df<-rbind(singles.df,one.row)
 }
 singles.df<-singles.df[-1,]
-colnames(singles.df)<-c("nodes","edges","graph density","mutual dyads","asymmetric dyads","diameter","in degree","out degree")
+colnames(singles.df)<-c("nodes","edges","graph density*1000","mutual dyads","asymmetric dyads","diameter","in degree","out degree")
 row.names(singles.df)<-courseIDs
 
 ## ***Made available using the The MIT License (MIT)***
