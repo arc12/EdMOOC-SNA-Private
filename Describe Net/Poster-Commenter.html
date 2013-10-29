@@ -155,7 +155,7 @@ hr {
 
 <p>The assumption of &ldquo;Poster-Commenter&rdquo; that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are <strong>not</strong> weighted by the number of comments. Self-commenting (loops) are ignored; self-comments may indicate a discussion with a prior commenter, which may be of interest to a more detailed look at interaction patters.</p>
 
-<p><strong>Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people.</strong></p>
+<p><strong>Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).</strong></p>
 
 <p><em>Could look at setting the tie threshold &gt;1, in which case things get a lot more sparse</em></p>
 
@@ -164,7 +164,7 @@ hr {
 <th align="left">id</th>
 <th align="center">nodes</th>
 <th align="left">edges</th>
-<th align="center">graph density</th>
+<th align="center">graph density*1000</th>
 <th align="left">mutual dyads</th>
 <th align="center">asymmetric dyads</th>
 <th align="left">diameter</th>
@@ -174,73 +174,73 @@ hr {
 </thead><tbody>
 <tr>
 <td align="left">aiplan</td>
-<td align="center">248</td>
+<td align="center">499</td>
 <td align="left">370</td>
-<td align="center">0.0060</td>
+<td align="center">1.4889</td>
 <td align="left">23</td>
 <td align="center">324</td>
 <td align="left">11</td>
-<td align="center">0.2548</td>
-<td align="left">0.1817</td>
+<td align="center">0.1275</td>
+<td align="left">0.0912</td>
 </tr>
 <tr>
 <td align="left">astro</td>
-<td align="center">2281</td>
+<td align="center">3889</td>
 <td align="left">5160</td>
-<td align="center">0.0010</td>
+<td align="center">0.3413</td>
 <td align="left">163</td>
 <td align="center">4834</td>
 <td align="left">22</td>
-<td align="center">0.0258</td>
-<td align="left">0.0298</td>
+<td align="center">0.0154</td>
+<td align="left">0.0177</td>
 </tr>
 <tr>
 <td align="left">crit</td>
-<td align="center">1919</td>
+<td align="center">4688</td>
 <td align="left">2446</td>
-<td align="center">0.0007</td>
+<td align="center">0.1113</td>
 <td align="left">18</td>
 <td align="center">2410</td>
 <td align="left">31</td>
-<td align="center">0.0270</td>
-<td align="left">0.0317</td>
+<td align="center">0.0112</td>
+<td align="left">0.0131</td>
 </tr>
 <tr>
 <td align="left">edc</td>
-<td align="center">1688</td>
+<td align="center">2544</td>
 <td align="left">3517</td>
-<td align="center">0.0012</td>
+<td align="center">0.5436</td>
 <td align="left">77</td>
 <td align="center">3363</td>
 <td align="left">26</td>
-<td align="center">0.0463</td>
-<td align="left">0.0327</td>
+<td align="center">0.0310</td>
+<td align="left">0.0219</td>
 </tr>
 <tr>
 <td align="left">equine</td>
-<td align="center">2491</td>
+<td align="center">6244</td>
 <td align="left">4940</td>
-<td align="center">0.0008</td>
+<td align="center">0.1267</td>
 <td align="left">106</td>
 <td align="center">4728</td>
 <td align="left">16</td>
-<td align="center">0.0623</td>
-<td align="left">0.0543</td>
+<td align="center">0.0250</td>
+<td align="left">0.0218</td>
 </tr>
 <tr>
 <td align="left">intro</td>
-<td align="center">3852</td>
+<td align="center">6989</td>
 <td align="left">8619</td>
-<td align="center">0.0006</td>
+<td align="center">0.1765</td>
 <td align="left">269</td>
 <td align="center">8081</td>
 <td align="left">31</td>
-<td align="center">0.0265</td>
-<td align="left">0.0428</td>
+<td align="center">0.0147</td>
+<td align="left">0.0237</td>
 </tr>
 </tbody></table>
 
-<p>Nodes are people and edges are poster-commenter relationships. The density is the proportion of possible edges that actually exist. Dyads are node pairs; mutuality indicates commenting has been reciprocated whereas asymmetry indicates a one-way relationship. The difference between the &ldquo;edges&rdquo; column and the sum of mutual and asymmetric dyads is accounted for by self-commenging edges. Diameter is the longest path between two people, in this case the direction of edges is significant. The degree statistics give a relative measure (relative to the theoretical maximum for the network size, and comparable between courses) of the extent to which in-bound or out-bound ties are concentrated. A value of zero would imply all people have the same degree centrality. A value of 1 would indicate that one person is maximally central. AI Planning is remarkably centralised.</p>
+<p>Nodes are people and edges are poster-commenter relationships. The density is the proportion of possible edges that actually exist. Dyads are node pairs; mutuality indicates commenting has been reciprocated whereas asymmetry indicates a one-way relationship. The difference between the &ldquo;edges&rdquo; column and the sum of mutual and asymmetric dyads is accounted for by self-commenging edges. Diameter is the longest path between two people, in this case the direction of edges is significant. The degree statistics give a relative measure (relative to the theoretical maximum for the network size, and comparable between courses) of the extent to which in-bound or out-bound ties are concentrated. A value of zero would imply all people have the same degree centrality. A value of 1 would indicate that one person is maximally central. AI Planning is remarkably centralised (especially as we know there are many isolates).</p>
 
 </body>
 
