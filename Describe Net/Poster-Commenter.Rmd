@@ -1,0 +1,33 @@
+Poster-Commenter Network Level Description
+========================================================
+
+The assumption of "Poster-Commenter" that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments. Self-commenting (loops) are ignored; self-comments may indicate a discussion with a prior commenter, which may be of interest to a more detailed look at interaction patters.
+
+__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people.__
+
+_Could look at setting the tie threshold >1, in which case things get a lot more sparse_
+
+```{r echo=FALSE, results='hide'}
+courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+net.type="P-C" #poster-commenter filename prefix
+echo.sql<-TRUE # echo SQL statements
+echo.flag<-TRUE #echo R source
+fig.width.default<-5
+fig.height.default<-5
+options(knitr.table.format = 'markdown')
+read_chunk("./Describe Net.R")
+```
+
+```{r INIT, echo=FALSE}
+#loads library and data from graphml
+```
+
+```{r SINGLES, echo=FALSE}
+#network level single quantities
+```
+
+```{r echo=FALSE, results='asis'}
+kable(singles.df, row.names=T, align='c')
+```
+
+Nodes are people and edges are poster-commenter relationships. The density is the proportion of possible edges that actually exist. Dyads are node pairs; mutuality indicates commenting has been reciprocated whereas asymmetry indicates a one-way relationship. The difference between the "edges" column and the sum of mutual and asymmetric dyads is accounted for by self-commenging edges. Diameter is the longest path between two people, in this case the direction of edges is significant. The degree statistics give a relative measure (relative to the theoretical maximum for the network size, and comparable between courses) of the extent to which in-bound or out-bound ties are concentrated. A value of zero would imply all people have the same degree centrality. A value of 1 would indicate that one person is maximally central. AI Planning is remarkably centralised.
