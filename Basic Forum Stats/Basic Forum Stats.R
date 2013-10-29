@@ -171,7 +171,7 @@ post_commentDist2<-list.SELECT(db, courseIDs, post_commentDist2.sql, echo=echo.s
 name<-"Basic Forum Stats"
 fname<-paste(name, ".RData", sep="")
 metadata<-list(project=basename(getwd()), origin=name, created=date())
-save(list=c("accessed.df",
+save(list=c("metadata", "accessed.df",
             "forumCount.df","threadCount.df","postCount.df","commentCount.df","bushiness.df",
             "orphans.df", "forumTopStruct",
             "posterRoles.df","posterDistS","posterDistT","commenterDistS","commenterDistT",
