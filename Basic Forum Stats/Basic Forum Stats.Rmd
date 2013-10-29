@@ -11,7 +11,7 @@ options(knitr.table.format = 'markdown')
 read_chunk("./Basic Forum Stats.R")
 ```
 
-```{r INIT, echo=FALSE}
+```{r INIT, echo=FALSE, message=FALSE}
 #initialises the DB and sources helper.
 ```
 
@@ -210,7 +210,7 @@ for(i in 1:length(post_commentDist2)){
 ```
 
 
-```{r EXIT, echo=FALSE}
+```{r EXIT, echo=FALSE, message=FALSE}
 #saves extracted data to an RData file and closes DB connection
 ```
 ```{r echo=FALSE}
