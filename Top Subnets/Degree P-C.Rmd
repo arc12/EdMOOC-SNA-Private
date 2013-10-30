@@ -1,11 +1,8 @@
-Extract and Visualise the Sub-network Containing the Highest In- and Out-degree Individuals
-========================================================
-
-This treats "Poster-Commenter" networks. The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments.
-
-
 ```{r echo=FALSE, results='hide', message=FALSE}
-courseID<-"intro"#c("aiplan","astro","crit","edc","equine","intro")
+if(!exists("courseID", inherits=T)){
+   #specify a single course here. Ignored when called (iteratively) from "Degree P-C - All Courses.R"
+    courseID<-"crit"#c("aiplan","astro","crit","edc","equine","intro")
+}
 net.type="P-C" #poster-commenter filename prefix
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where the extracted networks are stored
 echo.flag<-TRUE #echo R source
@@ -16,8 +13,11 @@ library("sna")
 library("network")
 ```
 
-`courseId`
----------
+Extract and Visualise the Sub-network Containing the Highest In- and Out-degree Individuals - `r courseID`
+========================================================
+
+This treats "Poster-Commenter" networks. The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments.
+
 
 ```{r  echo=FALSE}
 #loads RData file containiing network object and metadata
@@ -31,7 +31,7 @@ print(net1)
 ```{r  echo=echo.flag}
 odeg<-degree(net1, cmode="outdegree")
 ideg<-degree(net1, cmode="indegree")
-#get indexes to nodes and filter for tiny quantile (0.2%)
+#get indexes to nodes and filter for tiny quantile (0.5%)
 ocentile<-quantile(odeg,0.995)
 icentile<-quantile(ideg,0.995)
 oindex<-which(odeg>=ocentile)
@@ -52,13 +52,13 @@ outdegree.df<-cbind(forum_user_id=vnames[oindex], role=vroles[oindex], out.degre
 indegree.df<-cbind(forum_user_id=vnames[iindex], role=vroles[iindex], in.degree=ideg, match.out=iindex %in% oindex)
 ```
 
-**People with highest 0.2% Quantile Out-degree**
+**People with highest 0.5% Quantile Out-degree**
 
 ```{r results='asis', echo=FALSE}
 kable(outdegree.df)
 ```
 
-**People with Highest 0.2% Quantile In-degree**
+**People with Highest 0.5% Quantile In-degree**
 
 ```{r results='asis', echo=FALSE}
 kable(indegree.df)
@@ -66,13 +66,17 @@ kable(indegree.df)
 _Match.in/out shows where the same person appears in the other list._
 
 ## Extract the Subnet
-```{r fig.width=10, fig.height=10, fig.cap="test"}
+```{r fig.width=10, fig.height=10}
 # obtain the subgraph containing these nodes and linked edges
 top.subnet<-net1 %s% c(get.neighborhood(net1,iindex, type="combined"), get.neighborhood(net1,iindex, type="combined"))
 vertex.col<-as.numeric(top.subnet %v% "role")
 plot(top.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.col, vertices.last=FALSE)
 ```
-
+```{r fig.width=4, fig.height=5, echo=F}
+plot.new()
+leg=c("Administrator","Instructor","Teaching Staff","Student","Blocked","Student Access","Community TA","School Administrator","Student (Forum Banned)")
+legend(x=0,y=1,title="Roles", legend=leg, seq(1,9))
+```
 In practice, choosing a lower quantile (more high degree people selected) does not make much difference to the subnet if there are 1 or 2 very high degree individuals.
 
 ```{r echo=FALSE}
