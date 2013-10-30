@@ -4,8 +4,8 @@
 library(knitr)
 library(markdown)
 
-# base.dir relative to RStudio project working dir.
-# NB including an explicit "~/R Projects/Edinburgh MOOC/EdMOOC-SNA" causes markdownToHTML to fail to find file
+# NB including an explicit "~/R Projects/Edinburgh MOOC/EdMOOC-SNA" as argument to markdownToHTML
+# causes it to fail to find file. Also get figures directory in wrong place without setwd()
 setwd("~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Top Subnets")
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
 for (courseID in courseIDs){
