@@ -1,8 +1,9 @@
 ```{r echo=FALSE, results='hide', message=FALSE}
 if(!exists("courseID", inherits=T)){
    #specify a single course here. Ignored when called (iteratively) from "Degree P-C - All Courses.R"
-    courseID<-"crit"#c("aiplan","astro","crit","edc","equine","intro")
+    courseID<-"equine"#c("aiplan","astro","crit","edc","equine","intro")
 }
+top.quantile<-0.0025 #0.005 means look at posters in the top 0.5% of degree distribution
 net.type="P-C" #poster-commenter filename prefix
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where the extracted networks are stored
 echo.flag<-TRUE #echo R source
@@ -31,9 +32,10 @@ print(net1)
 ```{r  echo=echo.flag}
 odeg<-degree(net1, cmode="outdegree")
 ideg<-degree(net1, cmode="indegree")
-#get indexes to nodes and filter for tiny quantile (0.5%)
-ocentile<-quantile(odeg,0.995)
-icentile<-quantile(ideg,0.995)
+#get indexes to nodes and filter for tiny quantile (top.quantile)
+# not happy with this method, what is the best cut off to give comparable views between courses?
+ocentile<-quantile(odeg,1-top.quantile)
+icentile<-quantile(ideg,1-top.quantile)
 oindex<-which(odeg>=ocentile)
 iindex<-which(ideg>=icentile)
 odeg<-odeg[oindex]
@@ -52,13 +54,13 @@ outdegree.df<-cbind(forum_user_id=vnames[oindex], role=vroles[oindex], out.degre
 indegree.df<-cbind(forum_user_id=vnames[iindex], role=vroles[iindex], in.degree=ideg, match.out=iindex %in% oindex)
 ```
 
-**People with highest 0.5% Quantile Out-degree**
+**People with highest `r top.quantile*100`% Quantile Out-degree**
 
 ```{r results='asis', echo=FALSE}
 kable(outdegree.df)
 ```
 
-**People with Highest 0.5% Quantile In-degree**
+**People with Highest `r top.quantile*100`% Quantile In-degree**
 
 ```{r results='asis', echo=FALSE}
 kable(indegree.df)
@@ -66,18 +68,70 @@ kable(indegree.df)
 _Match.in/out shows where the same person appears in the other list._
 
 ## Extract the Subnet
+
+This includes all of the people above and any other person who they commented on or who commented on them. Individuals with 1 or only a few ties are not from the above sets but have been included as due to a tie with at least 1 member of these lists.
 ```{r fig.width=10, fig.height=10}
-# obtain the subgraph containing these nodes and linked edges
-top.subnet<-net1 %s% c(get.neighborhood(net1,iindex, type="combined"), get.neighborhood(net1,iindex, type="combined"))
+# obtain the subgraph containing these nodes and linked edges.
+# NB: get.neighbourhood is not vectorised!
+o.connected<-c(oindex,unlist(sapply(oindex, function(x){get.neighborhood(net1,x, type="combined")})))
+i.connected<-c(iindex,unlist(sapply(iindex, function(x){get.neighborhood(net1,x, type="combined")})))
+connected<-unique(c(o.connected,i.connected))
+top.subnet<-net1 %s% connected
 vertex.col<-as.numeric(top.subnet %v% "role")
+# we could colourise according to whether people were in the top set or only connected to them
+# using vertex.col<-as.numeric(connected[order(connected)] %in% c(oindex,iindex))+1 #order needed!
 plot(top.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.col, vertices.last=FALSE)
 ```
+There are `r length(connected)` individuals in the diagram.
+
+In practice, choosing selecting more high degree people selected, say 0.5% vs 0.25%, does not make much difference to the appearance of the subnet if there are 1 or 2 very high degree individuals.
+
+### The Network of Associates
+
+What does the network look like if we take away the highest degree people and only look at the people they were connected to (who were not already in either list, above).
+
+```{r fig.width=10, fig.height=10}
+connected.associates<-connected[!connected %in% c(oindex,iindex)]
+associates.subnet<-net1 %s% connected.associates
+vertex.col<-as.numeric(associates.subnet %v% "role")
+# we could colourise according to whether people were in the top set or only connected to them
+# using vertex.col<-as.numeric(connected[order(connected)] %in% c(oindex,iindex))+1 #order needed!
+plot(associates.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.col, vertices.last=FALSE)
+```
+There are `r length(connected.associates)` individuals in the diagram.
+
+
+### Compare to a randomly selected group of people numbering the same as the "associates"
+
+_The number of people is only approximately the same because `r length(connected.associates)` are drawn with replacement and then unique people plotted. Should be good enough for a qualitative comparison, which is what is intended, and the fraction of the people available is small._
+
+Beware: for a better comparison, we should randomly select people (posters) who have been commented on, or who have commented.
+
+```{r fig.width=10, fig.height=10}
+connected.random<-unique(round(runif(length(connected.associates),1,network.size(net1))))
+random.subnet<-net1 %s% connected.random
+vertex.col<-as.numeric(random.subnet %v% "role")
+plot(random.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.col, vertices.last=FALSE)
+```
+
+
+## Extract the subnet for only the highest degree (in and out) person and their ties.
+This will select 1 or 2 people and their ties, depending on whether the same individual has the highest in and out degrees or not.
+```{r fig.width=10, fig.height=10}
+o.connected.1<-c(oindex[1],get.neighborhood(net1,oindex[1], type="combined"))
+i.connected.1<-c(iindex[1],get.neighborhood(net1,iindex[1], type="combined"))
+connected.1<-unique(c(o.connected.1,i.connected.1))
+top.1.subnet<-net1 %s% connected.1
+vertex.1.col<-as.numeric(top.1.subnet %v% "role")
+plot(top.1.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.1.col, vertices.last=FALSE)
+```
+There are `r length(connected.1)` individuals in the diagram.
+
 ```{r fig.width=4, fig.height=5, echo=F}
 plot.new()
 leg=c("Administrator","Instructor","Teaching Staff","Student","Blocked","Student Access","Community TA","School Administrator","Student (Forum Banned)")
 legend(x=0,y=1,title="Roles", legend=leg, seq(1,9))
 ```
-In practice, choosing a lower quantile (more high degree people selected) does not make much difference to the subnet if there are 1 or 2 very high degree individuals.
 
 ```{r echo=FALSE}
 #save in UCINET DL format for gephi. This is limited to a single vertex label AFAIK.
