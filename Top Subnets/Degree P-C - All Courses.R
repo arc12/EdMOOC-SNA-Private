@@ -13,4 +13,5 @@ for (courseID in courseIDs){
    html.filename<-paste("Degree P-C - ",courseID,".html", sep="")
    knit("Degree P-C.Rmd", output=md.filename)
    markdownToHTML(md.filename, output=html.filename, stylesheet="../../custom_md.css")
+   file.remove(md.filename)
 }
