@@ -76,13 +76,10 @@ posterRoles.sql<- "SELECT u.access_group_id, COUNT(fp.forum_user_id) posts
          AND fp.deleted=0 AND ft.deleted = 0 AND ff.deleted = 0 AND fp.is_spam=0 GROUP BY u.access_group_id"
 posterRoles<-list.SELECT(db, courseIDs, posterRoles.sql, echo=echo.sql)
 #next is a bit hacky.
-posterRoles.mat<-matrix(NA,0,9)
+posterRoles.df<-data.frame(rep(character(),9))
 for(i in 1:length(posterRoles)){
-   posterRoles.mat<- rbind(posterRoles.mat,t(posterRoles[[i]][match(1:9, posterRoles[[i]]$access_group_id),"posts"]))
+   posterRoles.df<- rbind(posterRoles.df,t(posterRoles[[i]][match(1:9, posterRoles[[i]]$access_group_id),"posts"]))
 }
-posterRoles.df<- data.frame(posterRoles.mat)
-posterRoles.df[is.na(posterRoles.df)]<-0
-#colnames(posterRoles.df)<-paste("Role",seq(1,8),sep=".")
 colnames(posterRoles.df)<- dbGetQuery(db,"select name from vpodata_equinegen.access_groups WHERE id<10 ORDER BY ID")[,1]
 rownames(posterRoles.df)<-names(posterRoles)
 
@@ -156,11 +153,7 @@ post_commentDist.sql<-"SELECT comments, count(post_id) posts FROM (SELECT fp.id 
        GROUP BY comments ORDER BY comments"
 post_commentDist<-list.SELECT(db, courseIDs, post_commentDist.sql, echo=echo.sql)
 #number of posts with 0 comments
-post_0comments<-NULL
-for(i in 1:length(post_commentDist)){
-   post_0comments<-c(post_0comments, post_commentDist[[i]][1,"posts"])
-}
-names(post_0comments)<-names(post_commentDist)
+post_0comments<-unlist(lapply(post_commentDist, function(x){x[1,"posts"]}))
 # 2. post_commentDist2.sql is the full list of post ids with #comments BUT without those with 0 posts
 post_commentDist2.sql <- "SELECT fp.id post_id, count(fc.id) comments from **for.forum_posts fp,
     **for.forum_comments fc WHERE fc.post_id = fp.id AND fp.deleted = 0  GROUP BY fp.id"

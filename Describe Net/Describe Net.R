@@ -19,29 +19,29 @@ library("igraph")
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to store the extracted network to
 
 # load graphml into igraph objects
-igraphList<-list()
-for(i in 1:length(courseIDs)){
-   igraphList[[i]]<-read.graph(paste(store.dir,net.type," ", courseIDs[i],".graphml",sep=""), format="graphml")
-}
+igraphList<-lapply(courseIDs, function(x){read.graph(paste(store.dir,net.type," ", x,".graphml",sep=""), format="graphml")})
+# igraphList<-list()
+# for(i in 1:length(courseIDs)){
+#    igraphList[[i]]<-read.graph(paste(store.dir,net.type," ", courseIDs[i],".graphml",sep=""), format="graphml")
+# }
 
 ## @knitr SINGLES
 # these are single stats for the each graph, rather than distributions
-singles.df<-data.frame(t(rep(NA,8)))
+singles.df<-data.frame(rep(numeric(),8))
 for(i in 1:length(courseIDs)){
-   one.row<-singles.df[[1]]
-   one.row[1]<-vcount(igraphList[[i]])
-   one.row[2]<-ecount(igraphList[[i]])
-   one.row[3]<-1000*graph.density(igraphList[[i]], loops=FALSE)
    dyads<-dyad.census(igraphList[[i]])
-   one.row[4]<-dyads$mut
-   one.row[5]<-dyads$asym
-   one.row[6]<-diameter(igraphList[[i]])
-   #graph level degree centrality is normalised relative to the max possible for #nodes and #vertices
-   one.row[7]<-centralization.degree(igraphList[[i]], mode="in", loops=FALSE, normalized=TRUE)$centralization #in degree
-   one.row[8]<-centralization.degree(igraphList[[i]], mode="out", loops=FALSE, normalized=TRUE)$centralization #out degree
-   singles.df<-rbind(singles.df,one.row)
+   #    #graph level degree centrality is normalised relative to the max possible for #nodes and #vertices
+   singles.df<-rbind(singles.df,c(
+      nodes=vcount(igraphList[[i]]),
+      ecount(igraphList[[i]]),
+      1000*graph.density(igraphList[[i]], loops=FALSE),
+      dyads$mut,
+      dyads$asym,
+      diameter(igraphList[[i]]),
+      centralization.degree(igraphList[[i]], mode="in", loops=FALSE, normalized=TRUE)$centralization, #in degree
+      centralization.degree(igraphList[[i]], mode="out", loops=FALSE, normalized=TRUE)$centralization #out degree)
+   ))
 }
-singles.df<-singles.df[-1,]
 colnames(singles.df)<-c("nodes","edges","graph density*1000","mutual dyads","asymmetric dyads","diameter","in degree","out degree")
 row.names(singles.df)<-courseIDs
 
