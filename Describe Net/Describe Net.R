@@ -11,7 +11,7 @@
 # test if courseIDs has already been defined (in Rmd), otherwise default
 if(!exists("courseIDs")){
    courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
-   net.type="P-C"
+   tie.type="P-C"
 }
 
 ## @knitr INIT
@@ -19,30 +19,49 @@ library("igraph")
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to store the extracted network to
 
 # load graphml into igraph objects
-igraphList<-lapply(courseIDs, function(x){read.graph(paste(store.dir,net.type," ", x,".graphml",sep=""), format="graphml")})
+igraphList<-lapply(courseIDs, function(x){read.graph(paste(store.dir,tie.type," ", x,".graphml",sep=""), format="graphml")})
 # igraphList<-list()
 # for(i in 1:length(courseIDs)){
-#    igraphList[[i]]<-read.graph(paste(store.dir,net.type," ", courseIDs[i],".graphml",sep=""), format="graphml")
+#    igraphList[[i]]<-read.graph(paste(store.dir,tie.type," ", courseIDs[i],".graphml",sep=""), format="graphml")
 # }
+
+# all networks in a given set (tie.type) are assumed to be either directed or undirected and the 
+# work done in SINGLES assumes this to create a sensible summary table. Hence the following line is outside the loop
+directed.net<-is.directed(igraphList[[1]])
 
 ## @knitr SINGLES
 # these are single stats for the each graph, rather than distributions
-singles.df<-data.frame(rep(numeric(),8))
+if(directed.net){
+   singles.df<-data.frame(rep(numeric(),8))
+}else{
+   singles.df<-data.frame(rep(numeric(),5))
+}
 for(i in 1:length(courseIDs)){
-   dyads<-dyad.census(igraphList[[i]])
    #    #graph level degree centrality is normalised relative to the max possible for #nodes and #vertices
-   singles.df<-rbind(singles.df,c(
-      nodes=vcount(igraphList[[i]]),
+   one.row<-c(nodes=vcount(igraphList[[i]]),
       ecount(igraphList[[i]]),
       1000*graph.density(igraphList[[i]], loops=FALSE),
-      dyads$mut,
-      dyads$asym,
       diameter(igraphList[[i]]),
-      centralization.degree(igraphList[[i]], mode="in", loops=FALSE, normalized=TRUE)$centralization, #in degree
-      centralization.degree(igraphList[[i]], mode="out", loops=FALSE, normalized=TRUE)$centralization #out degree)
-   ))
+      centralization.degree(igraphList[[i]], mode="all", loops=FALSE, normalized=TRUE)$centralization,
+   centralization.closeness(igraphList[[i]], mode="all", normalized=TRUE)$centralization,
+   centralization.betweenness(igraphList[[i]], directed=FALSE, normalized=TRUE)$centralization)
+   if(directed.net){
+      dyads<-dyad.census(igraphList[[i]])
+      one.row<-c(one.row,                 
+                 centralization.degree(igraphList[[i]],
+                                       mode="in", loops=FALSE, normalized=TRUE)$centralization, #in degree
+                 centralization.degree(igraphList[[i]],
+                                       mode="out", loops=FALSE, normalized=TRUE)$centralization, #out degree
+                 dyads$mut,
+                 dyads$asym)
+   }
+   singles.df<-rbind(singles.df,one.row)
 }
-colnames(singles.df)<-c("nodes","edges","graph density*1000","mutual dyads","asymmetric dyads","diameter","in degree","out degree")
+if(directed.net){
+   colnames(singles.df)<-c("nodes","edges","graph density*1000","diameter","degree","closeness","betweenness","in degree","out degree","mutual dyads","asymmetric dyads")
+}else{
+   colnames(singles.df)<-c("nodes","edges","graph density*1000","diameter", "degree","closeness","betweenness")
+}
 row.names(singles.df)<-courseIDs
 
 ## ***Made available using the The MIT License (MIT)***
