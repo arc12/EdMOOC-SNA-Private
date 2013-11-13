@@ -15,35 +15,14 @@ source("./dbConnect.R")
 source("./helpers.R")
 
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+#which forum IDs indicate an "introductions and interests" forum
+intoductions.forumIDs<-c(10,12,2,25,2,11)#must be in same order as coursIDs.
 echo.sql<-TRUE # echo SQL statements
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to store the extracted network to
 do.plot<-F
 
-## For all SQL here. The wildcard ** is for replacement by vpodata_equine etc.
-
-# edges = comment-on-post relationship, nodes = user (person)
-# edges use forum_user_id
-# edges includes users that have been deleted (no hash-mapping entry) hence do not have the corresponding node
-# if I try to join to mapping from both fc and fp to exclude them, execution time is excessive. Not sure why.
-edgeList.sql <-"SELECT fc.forum_user_id commenter, fp.forum_user_id poster, count(fc.id) weight
-   FROM **for.forum_comments fc, **for.forum_posts fp
-      WHERE fc.post_id = fp.id
-         GROUP BY fc.forum_user_id, fp.forum_user_id
-            ORDER by fc.forum_user_id"
-# Use a union of poster and commenter ids to identify nodes.
-# note that the 2nd select in the union does not contain "fc.post_id = fp.id AND", hence will include isolates
-#                          (posters who got no comments)
-nodeList.sql <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
-   FROM **gen.users u, **map.hash_mapping m,
-      ((SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
-         **map.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id)
-      UNION DISTINCT
-       (SELECT m.anon_user_id FROM **for.forum_posts fp, **map.hash_mapping m
-         WHERE fp.forum_user_id = m.forum_user_id)) i
-   WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
-
-edgeList<-list.SELECT(db, courseIDs, edgeList.sql, echo=echo.sql)
-nodeList<-list.SELECT(db, courseIDs, nodeList.sql, echo=echo.sql)
+#group is inserted into output filenames. Used to separate all-forums from introductions-only
+worker<-function(group=""){
 
 #Iterate over the course-level list for some cleaning
 for(i in 1:length(courseIDs)){
@@ -60,7 +39,7 @@ for(i in 1:length(courseIDs)){
    edgeList1<-edgeList[[i]]
    nodeList1<-nodeList[[i]]
    igraph1<- graph.data.frame(edgeList1, directed=TRUE, vertices=nodeList1[,c("forum_user_id","role")])
-   write.graph(igraph1,paste(store.dir,"P-C ", courseIDs[i],".graphml",sep=""), format="graphml")
+   write.graph(igraph1,paste(store.dir,"P-C ", courseIDs[i],group,".graphml",sep=""), format="graphml")
 }
 
 #igraph and network packages conflict
@@ -90,7 +69,7 @@ for(i in 1:length(courseIDs)){
    name<-"Poster-Commenter"
    notes<-"net1 contains a network package object. *list1 contain separate edge and node data frames. 
             net1 does not allow loops and has binary edges but *list1 may have loops and has edge weights"
-   fname<-paste(store.dir,"P-C ", courseIDs[i], ".RData", sep="")
+   fname<-paste(store.dir,"P-C ", courseIDs[i], group, ".RData", sep="")
    metadata<-list(project=basename(getwd()), origin=name, created=date(), notes=notes)
    save(list=c("metadata","net1","edgeList1","nodeList1"), file=fname)
    cat(paste("Saved to",fname,"\r\n"))
@@ -100,8 +79,47 @@ for(i in 1:length(courseIDs)){
    }
    
 }
+}
 
-   
+## For all SQL here. The wildcard ** is for replacement by vpodata_equine etc.
+
+# edges = comment-on-post relationship, nodes = user (person)
+# edges use forum_user_id
+# edges includes users that have been deleted (no hash-mapping entry) hence do not have the corresponding node
+# if I try to join to mapping from both fc and fp to exclude them, execution time is excessive. Not sure why.
+edgeList.sql.a <-"SELECT fc.forum_user_id commenter, fp.forum_user_id poster, count(fc.id) weight
+FROM **for.forum_comments fc, **for.forum_posts fp
+WHERE fc.post_id = fp.id"
+edgeList.sql.b<-"GROUP BY fc.forum_user_id, fp.forum_user_id ORDER by fc.forum_user_id"
+
+# Use a union of poster and commenter ids to identify nodes.
+# note that the 2nd select in the union does not contain "fc.post_id = fp.id AND", hence will include isolates
+#                          (posters who got no comments)
+nodeList.sql.a <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
+                     FROM **gen.users u, **map.hash_mapping m,
+                     ((SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
+                     **map.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id"
+nodeList.sql.b<- ") UNION DISTINCT
+                  (SELECT m.anon_user_id FROM **for.forum_posts fp, **map.hash_mapping m
+                     WHERE fp.forum_user_id = m.forum_user_id"
+nodeList.sql.c<- ")) i
+            WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
+
+#this recipe gets from threads in all forums
+edgeList.sql<-paste(edgeList.sql.a,edgeList.sql.b)
+nodeList.sql<-paste(nodeList.sql.a, nodeList.sql.b, nodeList.sql.c)
+edgeList<-list.SELECT(db, courseIDs, edgeList.sql, echo=echo.sql)
+nodeList<-list.SELECT(db, courseIDs, nodeList.sql, echo=echo.sql)
+worker()
+
+# additional clauses to limit to Introductions forums. ## will be replaced witht an id in list.limit.SELECT()
+limitClause<- "AND fp.thread_id IN (SELECT ft.id FROM **for.forum_threads ft WHERE forum_id = ##)"
+edgeList.sql<-paste(edgeList.sql.a, limitClause, edgeList.sql.b)
+nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, nodeList.sql.c)
+edgeList<-list.limit.SELECT(db, courseIDs, edgeList.sql, intoductions.forumIDs, echo=echo.sql)
+nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
+worker("I")
+
 #end tidily
 dbDisconnect(db)
 
