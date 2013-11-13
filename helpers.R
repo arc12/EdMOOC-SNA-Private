@@ -37,6 +37,20 @@ list.SELECT <- function(db, schemaIDs, sql, echo=FALSE, schemaPrefix="vpodata_")
    return(ret.list)
 }
 
+# as list.SELECT but substities one item from a supplied vector (of length schemaIDs) for ## placeholder
+list.limit.SELECT <- function(db, schemaIDs, sql, replacements, echo=FALSE, schemaPrefix="vpodata_"){
+   ret.list<-list()
+   for(i in 1:length(schemaIDs)){
+      sql.1<-gsub("**", sql, fixed=T, replacement=paste(schemaPrefix,schemaIDs[i],sep=""))
+      sql.1<-gsub("##", sql.1, fixed=T, replacement=replacements[i])
+      if(echo && i==1){
+         cat(sql.1, sep="\r\n")
+      }
+      ret.list[[schemaIDs[i]]]<-dbGetQuery(db,sql.1)
+   }
+   return(ret.list)
+}
+
 ## ***Made available using the The MIT License (MIT)***
 #The MIT License (MIT)
 #Copyright (c) 2013 Adam Cooper, University of Bolton
