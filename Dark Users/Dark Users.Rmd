@@ -30,10 +30,19 @@ excludingDark.sql<-"SELECT count(1) excluding_dark FROM (
     UNION DISTINCT
     (SELECT DISTINCT ft.forum_user_id from **for.forum_threads ft, **map.hash_mapping m
         WHERE ft.forum_user_id = m.forum_user_id) ) i"
+orphanPC.sql<-"SELECT
+    (SELECT COUNT(1) from **for.forum_posts fp LEFT JOIN **map.hash_mapping m
+         ON fp.forum_user_id = m.forum_user_id
+            WHERE m.anon_user_id IS NULL) orphan_posts,
+    (SELECT COUNT(1) from **for.forum_comments fc LEFT JOIN **map.hash_mapping m
+         ON fc.forum_user_id = m.forum_user_id
+            WHERE m.anon_user_id IS NULL) orphan_comments"
 forumsDark.df<-tabular.SELECT(db, courseIDs, includingDark.sql, echo=echo.sql)
 forumsDark.df<-cbind(forumsDark.df,tabular.SELECT(db, courseIDs, excludingDark.sql, echo=echo.sql))
 pc.df<-data.frame(percent_lost=100-round(100*forumsDark.df[,"excluding_dark"]/forumsDark.df[,"including_dark"]))
 forumsDark.df<-cbind(forumsDark.df,pc.df)
+#posts and comments from dark users
+forumsDark.df<-cbind(forumsDark.df,tabular.SELECT(db, courseIDs, orphanPC.sql, echo=echo.sql))
 ```
 
 ```{r echo=FALSE, results='asis'}

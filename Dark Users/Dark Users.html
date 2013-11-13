@@ -181,12 +181,23 @@ hr {
 ##         WHERE ft.forum_user_id = m.forum_user_id) ) i
 </code></pre>
 
+<pre><code>## SELECT
+##     (SELECT COUNT(1) from vpodata_aiplanfor.forum_posts fp LEFT JOIN vpodata_aiplanmap.hash_mapping m
+##          ON fp.forum_user_id = m.forum_user_id
+##             WHERE m.anon_user_id IS NULL) orphan_posts,
+##     (SELECT COUNT(1) from vpodata_aiplanfor.forum_comments fc LEFT JOIN vpodata_aiplanmap.hash_mapping m
+##          ON fc.forum_user_id = m.forum_user_id
+##             WHERE m.anon_user_id IS NULL) orphan_comments
+</code></pre>
+
 <table><thead>
 <tr>
 <th align="left">id</th>
 <th align="center">including_dark</th>
 <th align="center">excluding_dark</th>
 <th align="center">percent_lost</th>
+<th align="left">orphan_posts</th>
+<th align="center">orphan_comments</th>
 </tr>
 </thead><tbody>
 <tr>
@@ -194,36 +205,48 @@ hr {
 <td align="center">670</td>
 <td align="center">499</td>
 <td align="center">26</td>
+<td align="left">223</td>
+<td align="center">56</td>
 </tr>
 <tr>
 <td align="left">astro</td>
 <td align="center">4398</td>
 <td align="center">3889</td>
 <td align="center">12</td>
+<td align="left">779</td>
+<td align="center">372</td>
 </tr>
 <tr>
 <td align="left">crit</td>
 <td align="center">5139</td>
 <td align="center">4688</td>
 <td align="center">9</td>
+<td align="left">707</td>
+<td align="center">224</td>
 </tr>
 <tr>
 <td align="left">edc</td>
 <td align="center">2941</td>
 <td align="center">2544</td>
 <td align="center">13</td>
+<td align="left">819</td>
+<td align="center">335</td>
 </tr>
 <tr>
 <td align="left">equine</td>
 <td align="center">6412</td>
 <td align="center">6244</td>
 <td align="center">3</td>
+<td align="left">280</td>
+<td align="center">45</td>
 </tr>
 <tr>
 <td align="left">intro</td>
 <td align="center">8145</td>
 <td align="center">6989</td>
 <td align="center">14</td>
+<td align="left">2286</td>
+<td align="center">1305</td>
 </tr>
 </tbody></table>
 
