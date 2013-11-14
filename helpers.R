@@ -5,6 +5,34 @@
 ## Various functions with utility value
 ## ****************************************************
 
+# map continent and country information (from uoe_ip_country) to a practically-useful concept of region
+# Regions are: UK & Ireland, N.America, Continental Europe, HK&China, India, S.America, Africa.
+# Also recodes Mexico to Central America (not Northern) and merges the Caribbean with C Am.
+# cc is a vector containing fields with names "country" and "continent"
+# returns a region string (defaults to continent if no region rule exists)
+map.toRegion<-function(cc){
+   region<- switch(cc["country"],
+                   'UNITED KINGDOM'="UK AND IRELAND",
+                   'IRELAND'="UK AND IRELAND",
+                   'ISLE OF MAN'="UK AND IRELAND",
+                   'CHINA'="CHINA",
+                   'HONG KONG'="CHINA",
+                   'TAIWAN, PROVINCE OF CHINA'="CHINA",
+                   'AUSTRALIA'="AUSTRALIA AND NZ",
+                   'NEW ZEALAND'="AUSTRALIA AND NZ",
+                   'MEXICO'="CENTRAL AMERICA",
+                   'INDIA'="INDIA"
+   )
+   if(is.null(region)){
+      region=cc["continent"]
+      if(cc["continent"]=="CARIBBEAN"){
+         region<-"CENTRAL AMERICA"
+      }
+   }
+  return (region)
+}
+
+
 # Loop over the vector of schemaIDs, replacing the "**" placeholder in sql with each
 # (prefixed by schemaPrefix) and executing on the (already connected) database db.
 # Set echo=T to reflect the SQL to output.
