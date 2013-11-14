@@ -31,6 +31,8 @@ for(i in 1:length(courseIDs)){
    #remove edges for nodes that cannot be found (i.e. withdrawn people)
    edgeList1<-edgeList1[edgeList1$commenter %in% nodeList1$forum_user_id,] #missing commenter
    edgeList[[i]]<-edgeList1[edgeList1$poster %in% nodeList1$forum_user_id,] #missing poster
+   #do some mapping to a definition of region that is more natural for interpretation
+   nodeList[[i]]<-cbind(nodeList1,region=apply(nodeList1,1,map.toRegion))
 }
 
 # temporarily load igraph to write out the network as graphml
@@ -38,7 +40,7 @@ library("igraph")
 for(i in 1:length(courseIDs)){
    edgeList1<-edgeList[[i]]
    nodeList1<-nodeList[[i]]
-   igraph1<- graph.data.frame(edgeList1, directed=TRUE, vertices=nodeList1[,c("forum_user_id","role")])
+   igraph1<- graph.data.frame(edgeList1, directed=TRUE, vertices=nodeList1[,c("forum_user_id","role","continent","country","region")])
    write.graph(igraph1,paste(store.dir,"P-C ", courseIDs[i],group,".graphml",sep=""), format="graphml")
 }
 
@@ -56,6 +58,9 @@ for(i in 1:length(courseIDs)){
    # add role attribute to the vertices
    set.vertex.attribute(net1, "anon_user_id", as.character(nodeList1[,"anon_user_id"]))
    set.vertex.attribute(net1, "role", as.character(nodeList1[,"role"]))
+   set.vertex.attribute(net1, "country", as.character(nodeList1[,"country"]))
+   set.vertex.attribute(net1, "continent", as.character(nodeList1[,"continent"]))
+   set.vertex.attribute(net1, "region", as.character(nodeList1[,"region"]))
    network.vertex.names(net1)<-as.character(nodeList1$forum_user_id)
    # add edges, noting that the matrix supplied to network.edgelist() must contain the index numbers of
    # the already-created vertices and NOT the node identifiers in nodeList1.
@@ -95,15 +100,17 @@ edgeList.sql.b<-"GROUP BY fc.forum_user_id, fp.forum_user_id ORDER by fc.forum_u
 # Use a union of poster and commenter ids to identify nodes.
 # note that the 2nd select in the union does not contain "fc.post_id = fp.id AND", hence will include isolates
 #                          (posters who got no comments)
-nodeList.sql.a <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role
-                     FROM **gen.users u, **map.hash_mapping m,
+nodeList.sql.a <- "SELECT m.forum_user_id, u.anon_user_id, u.access_group_id role,
+                           c.ip_continent continent, c.ip_country country
+                     FROM **gen.users u, **map.hash_mapping m, **gen.uoe_ip_country c,
                      ((SELECT m.anon_user_id FROM **for.forum_comments fc, **for.forum_posts fp,
                      **map.hash_mapping m WHERE fc.post_id = fp.id AND fc.forum_user_id = m.forum_user_id"
 nodeList.sql.b<- ") UNION DISTINCT
                   (SELECT m.anon_user_id FROM **for.forum_posts fp, **map.hash_mapping m
                      WHERE fp.forum_user_id = m.forum_user_id"
 nodeList.sql.c<- ")) i
-            WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id"
+            WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id
+               AND c.anon_user_id = u.anon_user_id"
 
 #this recipe gets from threads in all forums
 edgeList.sql<-paste(edgeList.sql.a,edgeList.sql.b)
