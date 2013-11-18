@@ -154,18 +154,6 @@ barplot(as.matrix(postsPerPerson.subj.x), ylab="Average Posts per Person", col=c
 legend("topright", inset=c(-0.15,0),legend=rev(rownames(userRegions.df)), fill=rev(cols), cex=0.6)
 ```
 
-### Significance
-
-Given the sample sizes, are these differences statistically significant?
-```{r BINOM_TESTS, echo=FALSE, message=FALSE}
-```
-The following table shows the percentage chance that the number of posters can be assumed to be the same as the average for the course. A value less than 5% would be a conventional threshold for asserting that the number of people posting in that region is significantly different from what would be exected from the whole-course average. Whether it is higher or lower than the mean can be judged from previous charts.
-
-```{r echo=FALSE, results='asis'}
-kable(100*H0.probs, row.names=T, align='c')
-```
-
-
 
 Regional Distribution of Most Active Users
 ---------
