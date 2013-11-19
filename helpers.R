@@ -5,6 +5,34 @@
 ## Various functions with utility value
 ## ****************************************************
 
+# make sure text does not have leading or trailing spaces characters
+trimText<-function(text){
+   txt<-gsub("\\s*$","", text,perl=T)
+   return (gsub("^\\s*","", txt,perl=T))
+}
+
+#make some friendly user id labels to length "len"
+# gives you A-Z for up to 26, Aa...Az...Bz...Zz otherwise.
+niceLabels<-function(len){
+   if(len>26^2){
+      stop("len too large. max value is 26^2, which is 676 and more than enough for labelling plots")
+   }
+   if(len<=26){
+      labels<-LETTERS[1:len]
+   }else{
+      ch1<-floor(len/26)
+      ch2<-len %% 26
+      labels<-character(0)
+      for (i in 1:ch1){
+         labels<-c(labels, paste(LETTERS[i], letters, sep=""))
+      }
+      if(ch2>0){
+         labels<-c(labels,paste(LETTERS[ch1+1],letters[1:ch2],sep=""))
+      }
+   }
+   return (labels)
+}
+
 # map continent and country information (from uoe_ip_country) to a practically-useful concept of region
 # Regions are: UK & Ireland, N.America, Continental Europe, HK&China, India, S.America, Africa.
 # Also recodes Mexico to Central America (not Northern) and merges the Caribbean with C Am.
