@@ -112,6 +112,9 @@ nodeList.sql.c<- ")) i
             WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id
                AND c.anon_user_id = u.anon_user_id"
 
+#connect to DB
+db<-conn()
+
 #this recipe gets from threads in all forums
 edgeList.sql<-paste(edgeList.sql.a,edgeList.sql.b)
 nodeList.sql<-paste(nodeList.sql.a, nodeList.sql.b, nodeList.sql.c)

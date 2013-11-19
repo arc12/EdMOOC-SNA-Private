@@ -38,7 +38,7 @@ worker<-function(group=""){
       #remove edges for nodes that cannot be found (i.e. withdrawn people)
       edgeList1<-edgeList1[edgeList1$node1 %in% nodeList1$forum_user_id,] 
       edgeList1<-edgeList1[edgeList1$node2 %in% nodeList1$forum_user_id,]
-      #SINCE THIS IS UNDIRECTED, remove "mirror image" edges
+      #SINCE THIS IS UNDIRECTED, remove "mirror image" edges. also removes loop (self) ties
       edgeList1<-edgeList1[!(paste(edgeList1$node1, edgeList1$node2) %in% paste(edgeList1$node2, edgeList1$node1)),]
       #store
       edgeList[[i]]<-edgeList1
@@ -105,8 +105,8 @@ edgeList.sql <-"SELECT DISTINCT fc.forum_user_id node1, fp.forum_user_id node2
                      FROM **for.forum_comments fc, **for.forum_posts fp WHERE fc.post_id = fp.id
                   UNION DISTINCT
                   SELECT DISTINCT fc1.forum_user_id node1, fc2.forum_user_id node2
-                     FROM **for.forum_comments fc1, **for.forum_comments fc2, **for.forum_posts fp
-                        WHERE fc1.post_id = fp.id AND fc2.post_id = fp.id 
+                     FROM **for.forum_comments fc1, **for.forum_comments fc2
+                        WHERE fc1.post_id = fc2.post_id
                            AND fc1.forum_user_id > fc2.forum_user_id" #last bit removes mirror and self cases
 
 # Use a union of poster and commenter ids to identify nodes.
@@ -123,6 +123,9 @@ nodeList.sql.b<- ") UNION DISTINCT
 nodeList.sql.c<- ")) i
             WHERE u.anon_user_id =i.anon_user_id AND m.anon_user_id =i.anon_user_id
                AND c.anon_user_id = u.anon_user_id"
+
+#connect to DB
+db<-conn()
 
 #this recipe gets from threads in all forums
 nodeList.sql<-paste(nodeList.sql.a, nodeList.sql.b, nodeList.sql.c)
