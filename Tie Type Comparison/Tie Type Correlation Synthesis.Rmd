@@ -1,0 +1,118 @@
+<style type="text/css">
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+</style>
+
+```{r echo=FALSE, message=FALSE}
+courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+data<-list()
+for (courseID in courseIDs){
+   name<-paste("Tie Type Correlation",courseID,sep=" - ")
+   load(file=paste("data/",name, ".RData", sep=""))
+   colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
+   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
+   data[[courseID]]<-list(pc=m1.df, pset=m2.df, sim_pc=sim1.df, sim_pset=sim2.df, pca_pc=pca1, pca_pset=pca2)
+}
+rm(m1.df, m2.df, sim1.df, sim2.df, pca1, pca2)
+# access the data using e.g. data$aiplan$pc[,"sqrt_betweenness"] for sqrt betweenness centrality for poster-commenter tie model in aiplan course
+```
+
+Edinburgh University Coursera MOOC Data Exploring Tie Type and Centrality Measures in Forum Activity Networks - Correlation, Independence and Usefulness
+=======
+Adam Cooper, Cetis, University of Bolton, November 2013
+
+Background
+-------
+### Structure of the Forums
+
+In the Coursera courses run from January 28\textsuperscript{th} 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment.
+
+### Defining the Activity Networks
+
+In order to translate patterns of activity into some kind of network for analysis, it is necessary to define a rule for what decides a connection between people and to give an interpretation of what a connection means. In what follows, following social network analysis conventions, the word "tie" is used to refer to the connections that are inferred from forum activity data and the word "node" will usually be used to refer to a person in the network.
+
+The nature of the forum activity data limits the kinds of statement that may reasonably be made from it about connections between people. Given this fact, a tie should be interpreted as indicating two people have a common interest in a particular piece of text, although this common interest may be a dispute. In the analysis presented here, no attempt is made to translate this to a common interest in a topic; i.e. there is no mapping between pieces of text according to their subject matter.
+
+Two models for what constitues a tie have been explored.
+
+**Poster-Commentre**
+The assumption of "Poster-Commenter" that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments. Self-commenting (loops) are ignored; self-comments may indicate a discussion with a prior commenter, which may be of interest to a more detailed look at interaction patters.
+
+**Post-Set**
+The assumption of "Poster-Set" is that a tie between individuals is defined by the group of people who contributed a post and any comments. All these people have a tie so this is an undirected network. Ties are are **not** weighted by the number of comments by the same person and self-commenting (loops) are ignored.
+
+
+### Centrality Measures Used
+
+Three centrality measures are considered.
+
+* **Degree** is the number of different people an individual has ties with, which can be separated to "in" and "out" for directed graphs. It is conceptually the most simple of the centrality measures, giving a measure of diversity of interaction. It does not, however, account for the number of posts or comments; a pair of people who have communicated with each other (and to no-one else) once and a similar pair who have communicated many times will both have degree=1.
+* **Betweenness** captures the extent to which paths between nodes pass through a given node (when taking the shortest path). An individual with a high betweenness centrality will be found to connect one or more groups. Betweenness is an important concept when considering brokerage of ideas between two groups and the influence this may confer. In the context of MOOC forums, which are open to all participants, betweenness is better seen as an indicator of the breadth of activity of an individual **relative** to other course participants. 
+* **Eigenvector** centrality aims to weight the centrality measure for an individual according to the centrality of people near to them. Individuals with high eigenvector centrality are embedded in dense parts of a network. Such individuals are expected to have a relatively high degree centrality but the reverse is not true; a person with high degree that is connected to many people with low degree will have low eigenvector centrality. In the context of MOOC forums, high eigenvector centrality is likely to indicate exposure to the widest range of ideas expressed in the forums because ideas are likely to be passed on, augmented, reworked, etc between different forums, posts and threads.
+
+
+All of these measures can be calculated either taking account of the direction of ties, in directed networks, or ignoring direction. The undirected measures will be used for comparison, since the "Post-Set" tie model gives an undirected network.
+
+Closeness centrality is not used because the values show little spread (in practice, only a few distinct values are seen).
+
+Analysis
+-------
+
+### Correlation Between Measures
+
+For comparison, a simulated network is generated with the same number of nodes using Erdos-Renyi generation rules. The generator rules are that ties are randomly distributed with a probability of any two nodes being connected equal to that in the observed network.
+
+Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
+
+For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
+
+### Correlation Between Tie Models
+
+### Principal Components - Another View on Dependence
+
+Notes on interpretation:
+* on the whole, we look at PCA here to summarise non-independence between the centrality measures rather than to select primary components.
+* when there are many components, selection often chooses PCs to th eleft of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables.
+
+### A Closer Look at Clusters in Eigenvector Centrality
+
+### Technical Notes
+
+Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. People who withdrew do not appear.
+
+__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
+
+
+Square root transformation is applied to the centrality measures to compress their long-tails.
+
+Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
+
+For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Square root measures are used as before.
+
+Conclusions
+---------
+
+### Selection of Tie Model and Centrality Measure
+
+### Character of the Networks
+
+Reference Material
+--------
+
+### Technical
+
+R[RCore] was used with the following packages: igraph[IGRAPH]
+
+[RCORE]: R Core Team (2013). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL http://www.R-project.org/.  
+[IGRAPH]: Csardi G, Nepusz T: The igraph software package for complex network research, InterJournal, Complex Systems 1695. 2006. http://igraph.sf.net
