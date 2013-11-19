@@ -36,17 +36,6 @@ for(i in 1:length(courseIDs)){
 dbDisconnect(db)
 
 ## deal with data
-# tie.type is P-C or P-Set. field.prefix is DB prefix pc_ or ps_
-process1<-function(courseID,tie.type,field.prefix){
-   ig<-read.graph(paste(store.dir,tie.type," ", courseID,".graphml",sep=""), format="graphml")
-   #build a dataframe for person-level centrality measures+role (for labelling)
-   c.df<-data.frame(degree=degree(ig, mode="all", loops=FALSE),
-                     betweenness=betweenness(ig, directed=FALSE),
-                     eigenvector=evcent(ig, directed=FALSE)$vector)
-   colnames(c.df) <- paste(field.prefix, colnames(c.df),sep="")
-   return(c.df)
-}
-
 for(courseID in courseIDs){
    print(courseID)
    ig<-read.graph(paste(store.dir,"P-C"," ", courseID,".graphml",sep=""), format="graphml")
