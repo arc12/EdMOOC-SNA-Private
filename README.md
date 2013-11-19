@@ -13,7 +13,14 @@ In general, files of type ... are ...:
 
 Basic Forum Stats
 ---------
+
+## Basic Forum Stats
+
 Looks at macro-level stats for forums per course: aggregate descriptive quantities and high level structural features. Some of this also appears in the 1st MOOC Report; this is partially a database familiarisation activity augmented by some processing to get some more basic numbers to inform next-steps and contextualise results.
+
+## Regional Differences
+
+Looks across forums and inspects regional differences.
 
 Dark Users
 ----------
@@ -28,12 +35,22 @@ Network Extractors
 Contains code to build networks based on different assumptions of what a tie is. These are plain R code and output - for each course separately - .RData containing the network (using the data structure from the "network" package) and a graphml file (created using the "igraph" package). Gephi can consume the graphml file, or it may be read in using the igraph package. NB igraph and network packages are not mutually compatible.
 
 ### Poster-Commenter Network
+
 The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster.
+
+### Post-Set Network
+
+An undirected graph where a poster and all commenters have mutual ties.
 
 Describe Net
 ------------
 
-Network level summary statistics
+Network level summary statistics. Can use Poster-Commenter and Post-Set
+
+Describe One User
+-----------
+
+Single user focus in a "poster-commenter" tie model. Shows their proximal network and the posts/comments that led to it. Role and region shown.
 
 Top Subnets
 -----------
@@ -41,6 +58,21 @@ Top Subnets
 Extract and visualise subnets defined by the highest individual-level network statistics.
 
 Currently only in/out degree (and for P-C networks)
+
+Tie Type Centrality Comparison
+------------
+
+Inspects networks defined by different tie types and looks for correlation etc. In other words: how similar do the centrality measures for different tie types appear to be?
+
+Forum Read Extract
+-------------
+
+Gets the peculiar key/value data and builds a MySQL table more suited to SQL access.
+
+Forum Attribute Patterns
+-----------
+
+Correlation, clustering and PCA experiments. Forum and thread-level investigation so far. Posts in progress.
 
 ERGM Models
 --------------------
