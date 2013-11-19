@@ -1,0 +1,104 @@
+```{r echo=FALSE, results='hide'}
+#this is normally called from "Tie Type Correlation - All Courses.R"
+if(!exists("courseID")){
+   courseID<-"astro"#"aiplan","astro","crit","edc","equine","intro"
+   tie.type.1<-"P-C"
+   tie.type.2<-"P-Set"
+}
+
+echo.flag<-TRUE #echo R source
+fig.width.default<-5
+fig.height.default<-5
+options(knitr.table.format = 'markdown')
+store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to load data from
+
+library("igraph")
+library("lattice")
+library("iplots")
+
+ig1<-read.graph(paste(store.dir,tie.type.1," ", courseID,".graphml",sep=""), format="graphml")
+ig2<-read.graph(paste(store.dir,tie.type.2," ", courseID,".graphml",sep=""), format="graphml")
+```
+
+Analysis of Correlation Between Centrality Measures in Networks with Different Tie Definitions - `r courseID`
+========================================================
+
+Instances are individuals.  The two tie types are poster-commenter and post-set.
+
+The attributes are (all undirected measures since P-Set is undirected):
+* Degree centrality
+* Betweenness centrality
+
+Closeness centrality is not used because the values show little spread (in practice, only a few distinct values are seen).
+
+Square root transformation is applied to the centrality measures to compress their long-tails.
+
+Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation. 
+
+There are a small number of people who have zero degree in P-C but non-zero in P-Set (1-2% by inspection). This is thought to arise from cases where a poster withdrew and was removed from the users table. Edges to deleted people are removed (we cannot know their role or geographical region) but the effect of this differs for different tie type definitiions. For P-C, it can lead to commenters who were connected to a withdrawn poster being left as isolates. The same will happen for P-Set when there is only a single commenter, but when there is more than one non-withdrawn commenter, these commenters WILL have a tie. Hence they will have non-zero degree in exactly the same posting-commenting scenario.
+
+```{r echo=echo.flag, message=FALSE}
+summary(ig1)
+summary(ig2)
+```
+
+```{r echo=echo.flag}
+#build a dataframe for person-level centrality measures+role (for labelling)
+m1.df<-data.frame(role=get.vertex.attribute(ig1, name="role"),
+                 sqrt_degree1=sqrt(degree(ig1, mode="all", loops=FALSE)),
+                 sqrt_betweenness1=sqrt(betweenness(ig1, directed=FALSE)),
+                  sqrt_eigenvector1=sqrt(evcent(ig1, directed=FALSE)$vector))
+m2.df<-data.frame(sqrt_degree2=sqrt(degree(ig2, mode="all", loops=FALSE)),
+                 sqrt_betweenness2=sqrt(betweenness(ig2, directed=FALSE)),
+                  sqrt_eigenvector2=sqrt(evcent(ig2, directed=FALSE)$vector))
+#ensure that the forum_user_ids correspond. For P-C and P-Set the nodes are the same but do not rely on odering.
+m2.df<-m2.df[rownames(m1.df),]
+#
+m.df<-cbind(m1.df,m2.df)
+plot(m.df[,2:7])
+
+# attach(m.df)
+# iplot(sqrt_betweenness1, sqrt_betweenness2)
+# iplot(sqrt_degree1, sqrt_degree2)#
+# iplot(sqrt_betweenness1, sqrt_degree1)
+# iplot(sqrt_betweenness2, sqrt_degree2)
+# ibar(role)
+```
+
+Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
+
+For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
+
+Correlation
+---------
+
+Spearman correlation is used; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is appropriate for skew distributions but I have no confidence that the coefficients are quantitatively meaningful. 
+
+```{r results='asis'}
+kable(cor(m.df[,-1], use="complete.obs", method="spearman"))
+```
+
+Principal Component Analysis
+---------
+The variance is normalised to 1 for each variable (scale. = T in prcomp)
+
+NB: PCA is sensitive to outliers so should inspect-and-remove extreme cases (typically "introductions" forums)
+
+```{r }
+#prcomp has a bug such that na.action is ignored unless the forumula method is used
+pca1 = prcomp(formula=~., data=m1.df[,-1], na.action=na.omit, scale. = TRUE)
+plot(pca1)
+pca1$sdev# sqrt of eigenvalues
+pca1$rotation   # loadings
+#pca1$x          # PCs (aka scores)
+
+biplot(pca1, xlabs=m1.df[,1],cex=0.5, main=tie.type.1)
+
+pca2 = prcomp(formula=~., data=m2.df, na.action=na.omit, scale. = TRUE)
+plot(pca2)
+pca2$sdev# sqrt of eigenvalues
+pca2$rotation   # loadings
+#pca1$x          # PCs (aka scores)
+
+biplot(pca2, xlabs=m1.df[,1],cex=0.5, main=tie.type.2)
+```
