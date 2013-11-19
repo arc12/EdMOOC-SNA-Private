@@ -1,0 +1,116 @@
+```{r echo=FALSE}
+# execute this from "Describe One User.R"
+echo.flag<-TRUE #echo R source
+sql.echo<-T
+options(knitr.table.format = 'markdown')
+source("../helpers.R")
+source("../dbConnect.R")
+#library("sna")
+library("network")
+```
+Forum Connections for User: `r courseID` - `r forum_user_id`
+========================================================
+
+Describe the network and posts/comments of a single user. This uses the poster-commenter (directed) tie definition. The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments.
+
+```{r  echo=FALSE}
+#loads RData file containiing network object and metadata
+store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where the extracted networks are stored
+load(paste(store.dir,"P-C ",courseID,".RData", sep=""))
+cat(paste("Loaded data. Created by:",metadata$origin,"Created on:",metadata$created))
+print(net1)
+```
+
+Proximal Sociogram
+------------
+
+This shows all people directly connected to this individual and the connections between these people. The arrows show the direction "commented on a post by".
+
+```{r fig.width=7, fig.height=7}
+# we need the index for the given user in the vertex list
+focus.index<-match(forum_user_id, net1 %v% "vertex.names")
+# obtain the subgraph containing these nodes and linked edges.
+connected<-get.neighborhood(net1,focus.index, type="combined")
+focus.subnet<-net1 %s% connected
+regions<-factor(focus.subnet %v% "region")
+vertex.col<-unclass(regions)
+vertex.sides<-c(50,3,3,6,50,6,4,50,6)[as.numeric(focus.subnet %v% "role")]
+connected.fids<-focus.subnet %v% "vertex.names"
+nice.labels<-niceLabels(length(connected))
+#some re-ordering to make sure the focus node is labelled "A" (or "Aa")
+ix<-match(forum_user_id,focus.subnet %v% "vertex.names")
+if(ix>1){
+   A<-nice.labels[1]#may be "Aa"
+   nice.labels[1]<-nice.labels[ix]
+   nice.labels[ix]<-A
+}
+plot(focus.subnet, arrowhead.cex=0.7, edge.lwd=0.4, vertex.col=vertex.col, vertex.sides=vertex.sides, vertices.last=FALSE, label=nice.labels, label.cex=1.2, vertex.cex=2.0, pad=0.8)
+#plot.new()
+legend("topleft",legend=levels(regions),fill=1:length(regions), cex=0.7)
+```
+
+```{r echo=FALSE, results='asis'}
+kable(cbind(label=nice.labels[order(nice.labels)],forum_user_id=connected.fids[order(nice.labels)]))
+```
+
+*Shape denotes role: hexagons are students, triangles are teaching staff, squares are community TAs, circles are others.*
+
+
+Posts and Comments
+-----------
+
+## Posts by the focus person that attracted comments from others
+
+```{r echo=FALSE, message=FALSE}
+db<-conn()
+sql<-paste("select DISTINCT fp.id, fp.post_text, ft.title thread_title, ff.name forum_name, GROUP_CONCAT(DISTINCT fc.forum_user_id separator ',') commenters, fp.deleted, fp.is_spam 
+           FROM **for.forum_posts fp
+               JOIN **for.forum_threads ft ON ft.id = fp.thread_id
+               JOIN **for.forum_forums ff ON ff.id = ft.forum_id
+               JOIN **for.forum_comments fc ON fc.post_id = fp.id
+                  WHERE fp.forum_user_id = '",forum_user_id,"' GROUP BY fp.id;",sep="")
+           
+   sql.1<-gsub("**", sql, fixed=T, replacement=paste("vpodata",courseID,sep="_"))
+   if(sql.echo){
+      cat(sql.1, sep="\r\n")
+   }
+   posts<-dbGetQuery(db,sql.1)
+dd<-dbDisconnect(db)
+```
+
+```{r echo=FALSE, results='asis', }
+   for(i in 1:length(posts[,1])){
+      cat(paste("**\"", trimText(posts[i,"post_text"]),"\"**  \r\n",sep=""))
+      cat(paste("*Appeared in forum: ", trimText(posts[i,"forum_name"]),", Thread: ", trimText(posts[i,"thread_title"]),"*  \r\n",sep=""))
+      commenters<-strsplit(posts[i,"commenters"],",")[[1]]
+      cat(paste("*Commented on by: ",paste(nice.labels[match(commenters, connected.fids)], collapse=", "),"*\r\n\r\n",sep=""))
+   }
+```
+
+## Posts by others that attracted comment from the focus person
+
+```{r echo=FALSE, message=FALSE}
+db<-conn()
+sql<-paste("select fc.id, fc.comment_text, fp.post_text, fp.forum_user_id poster, ft.title thread_title,
+           ff.name forum_name, fc.deleted, fc.is_spam from **for.forum_comments fc
+        JOIN **for.forum_posts fp ON fc.post_id = fp.id
+        JOIN **for.forum_threads ft ON ft.id = fp.thread_id
+        JOIN **for.forum_forums ff ON ff.id = ft.forum_id
+            where fc.forum_user_id ='",forum_user_id,"'",sep="")
+           
+   sql.1<-gsub("**", sql, fixed=T, replacement=paste("vpodata",courseID,sep="_"))
+   if(sql.echo){
+      cat(sql.1, sep="\r\n")
+   }
+   comments<-dbGetQuery(db,sql.1)
+dd<-dbDisconnect(db)
+```
+
+```{r echo=FALSE, results='asis', }
+   for(i in 1:length(comments[,1])){
+      cat(paste("**\"", trimText(comments[i,"comment_text"]),"\"**  \r\n",sep=""))
+      cat(paste("*On post: \"",trimText(comments[i,"post_text"]),"\" by: ",nice.labels[match(comments[i,"poster"], connected.fids)],"*  \r\n",sep=""))
+      cat(paste("*In forum: ", trimText(comments[i,"forum_name"]),", Thread: ", trimText(comments[i,"thread_title"]),"*  \r\n\r\n",sep=""))
+   }
+```
+
