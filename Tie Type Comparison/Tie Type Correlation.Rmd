@@ -28,8 +28,11 @@ Instances are individuals.  The two tie types are poster-commenter and post-set.
 The attributes are (all undirected measures since P-Set is undirected):
 * Degree centrality
 * Betweenness centrality
+* Eigenvector centrality
 
 Closeness centrality is not used because the values show little spread (in practice, only a few distinct values are seen).
+
+Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. People who withdrew do not appear.
 
 Square root transformation is applied to the centrality measures to compress their long-tails.
 
@@ -40,6 +43,23 @@ There are a small number of people who have zero degree in P-C but non-zero in P
 ```{r echo=echo.flag, message=FALSE}
 summary(ig1)
 summary(ig2)
+```
+
+For comparison, a simulated network is generated with the same number of nodes and edges using Erdos-Renyi generation rules. The generator rules are that edges are randomly distributed.
+```{r echo=echo.flag, message=FALSE}
+ig3<-erdos.renyi.game(vcount(ig1), ecount(ig1), type="gnm", directed=T)
+ig4<-erdos.renyi.game(vcount(ig2), ecount(ig2), type="gnm", directed=F)
+```
+
+```{r echo=echo.flag}
+sim1.df<-data.frame(sqrt_degree=sqrt(degree(ig3, mode="all", loops=FALSE)),
+                 sqrt_betweenness=sqrt(betweenness(ig3, directed=FALSE)),
+                  sqrt_eigenvector=sqrt(evcent(ig3, directed=FALSE)$vector))
+plot(sim1.df, main="Correlation of Square Root of Centrality Measures in Random Graph", sub="Poster-Commenter")
+sim2.df<-data.frame(sqrt_degree=sqrt(degree(ig4, mode="all", loops=FALSE)),
+                 sqrt_betweenness=sqrt(betweenness(ig4, directed=FALSE)),
+                  sqrt_eigenvector=sqrt(evcent(ig4, directed=FALSE)$vector))
+plot(sim2.df, main="Correlation of Square Root of Centrality Measures in Random Graph", sub="Post-Set")
 ```
 
 ```{r echo=echo.flag}
@@ -53,9 +73,13 @@ m2.df<-data.frame(sqrt_degree2=sqrt(degree(ig2, mode="all", loops=FALSE)),
                   sqrt_eigenvector2=sqrt(evcent(ig2, directed=FALSE)$vector))
 #ensure that the forum_user_ids correspond. For P-C and P-Set the nodes are the same but do not rely on odering.
 m2.df<-m2.df[rownames(m1.df),]
+#eliminate isolates (see markdown text above).
+#done before cbind so each can be used separately
+m2.df<-m2.df[m1.df[,"sqrt_degree1"]!=0,]
+m1.df<-m1.df[m1.df[,"sqrt_degree1"]!=0,]
 #
 m.df<-cbind(m1.df,m2.df)
-plot(m.df[,2:7])
+plot(m.df[,2:7], main="Correlation of Square Root of Centrality Measures")
 
 # attach(m.df)
 # iplot(sqrt_betweenness1, sqrt_betweenness2)
@@ -64,10 +88,6 @@ plot(m.df[,2:7])
 # iplot(sqrt_betweenness2, sqrt_degree2)
 # ibar(role)
 ```
-
-Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
-
-For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
 
 Correlation
 ---------
@@ -80,25 +100,37 @@ kable(cor(m.df[,-1], use="complete.obs", method="spearman"))
 
 Principal Component Analysis
 ---------
-The variance is normalised to 1 for each variable (scale. = T in prcomp)
+The variance is normalised to 1 for each variable (scale. = T in prcomp). Square root measures are used as before.
 
 NB: PCA is sensitive to outliers so should inspect-and-remove extreme cases (typically "introductions" forums)
 
-```{r }
+Notes on interpretation:
+* on the whole, we look at PCA here to summarise non-independence between the centrality measures rather than to select primary components.
+* when there are many components, selection often chooses PCs to th eleft of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables.
+
+```{r echo=echo.flag}
 #prcomp has a bug such that na.action is ignored unless the forumula method is used
 pca1 = prcomp(formula=~., data=m1.df[,-1], na.action=na.omit, scale. = TRUE)
-plot(pca1)
-pca1$sdev# sqrt of eigenvalues
+plot(pca1, main =paste("Scree Plot for", tie.type.1))
+paste("Percentage of variance for PCs in order: ",paste(round(100*(pca1$sdev^2)/sum(pca1$sdev^2),1),collapse="%, "),"%",sep="")
 pca1$rotation   # loadings
-#pca1$x          # PCs (aka scores)
-
 biplot(pca1, xlabs=m1.df[,1],cex=0.5, main=tie.type.1)
+```
 
+```{r echo=echo.flag}
 pca2 = prcomp(formula=~., data=m2.df, na.action=na.omit, scale. = TRUE)
 plot(pca2)
-pca2$sdev# sqrt of eigenvalues
+paste("Percentage of variance for PCs in order: ",paste(round(100*(pca2$sdev^2)/sum(pca2$sdev^2),1),collapse="%, "),"%",sep="")
 pca2$rotation   # loadings
-#pca1$x          # PCs (aka scores)
-
 biplot(pca2, xlabs=m1.df[,1],cex=0.5, main=tie.type.2)
+```
+
+```{r echo=FALSE}
+# saves useful data
+name<-paste("Tie Type Correlation",courseID,sep=" - ")
+fname<-paste("data/",name, ".RData", sep="")
+metadata<-list(project=basename(getwd()), origin=name, created=date())
+save(list=c("m1.df", "m2.df", "sim1.df", "sim2.df", "tie.type.1", "tie.type.2", "pca1","pca2"),
+     file=fname)
+cat(paste("Saved to",fname,"\r\n"))
 ```
