@@ -20,6 +20,9 @@ source("./dbConnect.R")
 #helper functions
 source("./helpers.R")
 
+# threshold for minimum number of contributions to a thread by a person for them to be included
+thd.thresh<-3
+
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
 #which forum IDs indicate an "introductions and interests" forum
 intoductions.forumIDs<-c(10,12,2,25,2,11)#must be in same order as coursIDs.
@@ -41,18 +44,24 @@ worker<-function(group=""){
       
       edges<-data.frame(node1=character(0), node2=character(0))
       tu<-threadUsersList[[i]]
-      threadIDs<-unique(tu[,"thread_id"])
-      for(threadID in threadIDs){
-         fids<-tu$forum_user_id[tu$thread_id == threadID]
-         #remove forum user ids for which there are no nodes. This may happen if there is no IP data, hence no geographical attribute info. This is best done BEFORE taking combinations, I think....
-         fids<-fids[fids %in% nodeList1$forum_user_id]
-         if(length(fids)>1){
-            # this avoids self-ties and mirror-image ties
-            edges<-rbind(edges, t(combn(fids,2)))
+      
+      #guard against empty
+      if(length(rownames(tu))!=0){
+         threadIDs<-unique(tu[,"thread_id"])
+         for(threadID in threadIDs){
+            fids<-tu$forum_user_id[tu$thread_id == threadID]
+            #remove forum user ids for which there are no nodes. This may happen if there is no IP data, hence no geographical attribute info. This is best done BEFORE taking combinations, I think....
+            fids<-fids[fids %in% nodeList1$forum_user_id]
+            if(length(fids)>1){
+               # this avoids self-ties and mirror-image ties
+               edges<-rbind(edges, t(combn(fids[order(fids)],2)))
+            }
          }
       }
       #de-dupe and store
+      colnames(edges)<-c("node1","node2")
       edgeList[[i]]<-unique(edges)
+      
    }
    
    # temporarily load igraph to write out the network as graphml
@@ -91,7 +100,7 @@ worker<-function(group=""){
       network.edgelist(edge.mat, net1)
       
       # saves network object
-      name<-"Post-Set"
+      name<-"Whole-Thread"
       notes<-"net1 contains a network package object. *list1 contain separate edge and node data frames. 
             net1 does not allow loops and has binary edges but *list1 may have loops"
       fname<-paste(store.dir,tie.type," ", courseIDs[i], group, ".RData", sep="")
@@ -107,14 +116,30 @@ worker<-function(group=""){
 ## For all SQL here. The wildcard ** is for replacement by vpodata_equine etc.
 # this gets users per thread. Need to further process to get edges by a "cross product"
 # this DOES NOT contain deleted users
-threadUsersList.sql.a <-"SELECT DISTINCT ft.id thread_id, fp.forum_user_id FROM **for.forum_threads ft
-                           JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
-                           JOIN **map.hash_mapping m ON fp.forum_user_id = m.forum_user_id"
-threadUsersList.sql.b <-"UNION DISTINCT
-                      SELECT DISTINCT ft.id thread_id, fc.forum_user_id FROM **for.forum_threads ft
-                           JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
-                           JOIN  **for.forum_comments fc ON fc.post_id = fp.id
-                           JOIN **map.hash_mapping m ON fc.forum_user_id = m.forum_user_id"
+threadUsersList.sql.a <-"SELECT thread_id, forum_user_id, thread_contributions FROM
+   (SELECT thread_id, forum_user_id, sum(contributions) thread_contributions FROM
+      (SELECT ft.id thread_id, fp.forum_user_id, count(1) contributions FROM **for.forum_threads ft
+       JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
+      JOIN **map.hash_mapping m ON fp.forum_user_id = m.forum_user_id"
+threadUsersList.sql.b <-"group by ft.id, fp.forum_user_id
+      UNION 
+      SELECT ft.id thread_id, fc.forum_user_id, count(1) contributions FROM **for.forum_threads ft
+       JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
+       JOIN  **for.forum_comments fc ON fc.post_id = fp.id
+      JOIN **map.hash_mapping m ON fc.forum_user_id = m.forum_user_id"
+
+threadUsersList.sql.c <-paste("group by  ft.id, fc.forum_user_id) a
+                     group by thread_id, forum_user_id )b
+                        WHERE thread_contributions >=", thd.thresh)
+
+# threadUsersList.sql.a <-"SELECT DISTINCT ft.id thread_id, fp.forum_user_id FROM **for.forum_threads ft
+#                            JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
+#                            JOIN **map.hash_mapping m ON fp.forum_user_id = m.forum_user_id"
+# threadUsersList.sql.b <-"UNION DISTINCT
+#                       SELECT DISTINCT ft.id thread_id, fc.forum_user_id FROM **for.forum_threads ft
+#                            JOIN  **for.forum_posts fp ON fp.thread_id = ft.id
+#                            JOIN  **for.forum_comments fc ON fc.post_id = fp.id
+#                            JOIN **map.hash_mapping m ON fc.forum_user_id = m.forum_user_id"
 
 # Use a union of poster and commenter ids to get attributes
 # note that the 2nd select in the union does not contain "fc.post_id = fp.id AND", hence will include isolates
@@ -136,26 +161,26 @@ db<-conn()
 
 #this recipe gets from threads in all forums
 nodeList.sql<-paste(nodeList.sql.a, nodeList.sql.b, nodeList.sql.c)
-threadUsersList.sql<-paste(threadUsersList.sql.a, threadUsersList.sql.b)
+threadUsersList.sql<-paste(threadUsersList.sql.a, threadUsersList.sql.b, threadUsersList.sql.c)
 nodeList<-list.SELECT(db, courseIDs, nodeList.sql, echo=echo.sql)
 threadUsersList<-list.SELECT(db, courseIDs, threadUsersList.sql, echo=echo.sql)
-worker()
+worker(thd.thresh)
 
 # additional clauses to limit to Introductions forums. ## will be replaced witht an id in list.limit.SELECT()
 limitClause<- "AND fp.thread_id IN (SELECT ft.id FROM **for.forum_threads ft WHERE forum_id = ##)"
 nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, nodeList.sql.c)
-threadUsersList.sql<-paste(threadUsersList.sql.a, limitClause, threadUsersList.sql.b, limitClause)
+threadUsersList.sql<-paste(threadUsersList.sql.a, limitClause, threadUsersList.sql.b, limitClause, threadUsersList.sql.c)
 nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
 threadUsersList<-list.limit.SELECT(db, courseIDs, threadUsersList.sql, intoductions.forumIDs, echo=echo.sql)
-worker("I")
+worker(paste("I",thd.thresh,sep=""))
 
 # additional clauses to EXCLUDE Introductions forums.
 limitClause<- "AND fp.thread_id NOT IN (SELECT ft.id FROM **for.forum_threads ft WHERE forum_id = ##)"
 nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, nodeList.sql.c)
-threadUsersList.sql<-paste(threadUsersList.sql.a, limitClause, threadUsersList.sql.b, limitClause)
+threadUsersList.sql<-paste(threadUsersList.sql.a, limitClause, threadUsersList.sql.b, limitClause, threadUsersList.sql.c)
 nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
 threadUsersList<-list.limit.SELECT(db, courseIDs, threadUsersList.sql, intoductions.forumIDs, echo=echo.sql)
-worker("noI")
+worker(paste("noI",thd.thresh,sep=""))
 
 #end tidily
 dbDisconnect(db)
