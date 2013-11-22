@@ -4,6 +4,7 @@ if(!exists("courseID")){
    courseID<-"astro"#"aiplan","astro","crit","edc","equine","intro"
    tie.type.1<-"P-C"
    tie.type.2<-"P-Set"
+   group<-""
 }
 
 echo.flag<-TRUE #echo R source
@@ -13,11 +14,22 @@ options(knitr.table.format = 'markdown')
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to load data from
 
 library("igraph")
-library("lattice")
-library("iplots")
+#library("lattice")
+#library("iplots")
 
-ig1<-read.graph(paste(store.dir,tie.type.1," ", courseID,".graphml",sep=""), format="graphml")
-ig2<-read.graph(paste(store.dir,tie.type.2," ", courseID,".graphml",sep=""), format="graphml")
+if(tie.type.1 == "Whole-T"){
+   group1<-paste(group,thd.thresh, sep="")
+}else{
+   group1<-group
+}
+if(tie.type.2 == "Whole-T"){
+   group2<-paste(group,thd.thresh, sep="")
+}else{
+   group2<-group
+}
+
+ig1<-read.graph(paste(store.dir,tie.type.1," ", courseID,group1,".graphml",sep=""), format="graphml")
+ig2<-read.graph(paste(store.dir,tie.type.2," ", courseID,group2,".graphml",sep=""), format="graphml")
 ```
 
 Analysis of Correlation Between Centrality Measures in Networks with Different Tie Definitions - `r courseID`
@@ -36,12 +48,14 @@ Data for the whole course run is used. This means that we should expect people w
 
 Square root transformation is applied to the centrality measures to compress their long-tails.
 
-Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation. 
+Isolates are removed. Specifically, nodes that are isolates in both are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation. 
 
 There are a small number of people who have zero degree in P-C but non-zero in P-Set (1-2% by inspection). This is thought to arise from cases where a poster withdrew and was removed from the users table. Edges to deleted people are removed (we cannot know their role or geographical region) but the effect of this differs for different tie type definitiions. For P-C, it can lead to commenters who were connected to a withdrawn poster being left as isolates. The same will happen for P-Set when there is only a single commenter, but when there is more than one non-withdrawn commenter, these commenters WILL have a tie. Hence they will have non-zero degree in exactly the same posting-commenting scenario.
 
 ```{r echo=echo.flag, message=FALSE}
+print(paste(tie.type.1, group1))
 summary(ig1)
+print(paste(tie.type.2, group2))
 summary(ig2)
 ```
 
@@ -74,9 +88,10 @@ m2.df<-data.frame(sqrt_degree2=sqrt(degree(ig2, mode="all", loops=FALSE)),
 #ensure that the forum_user_ids correspond. For P-C and P-Set the nodes are the same but do not rely on odering.
 m2.df<-m2.df[rownames(m1.df),]
 #eliminate isolates (see markdown text above).
-#done before cbind so each can be used separately
-m2.df<-m2.df[m1.df[,"sqrt_degree1"]!=0,]
-m1.df<-m1.df[m1.df[,"sqrt_degree1"]!=0,]
+#done before cbind so each can be m1, m2 can be used separately
+non.isolates.mask<-(m1.df[,"sqrt_degree1"]!=0) | (m2.df[,"sqrt_degree2"]!=0)
+m2.df<-m2.df[non.isolates.mask,]
+m1.df<-m1.df[non.isolates.mask,]
 #
 m.df<-cbind(m1.df,m2.df)
 plot(m.df[,2:7], main="Correlation of Square Root of Centrality Measures")
@@ -114,7 +129,7 @@ pca1 = prcomp(formula=~., data=m1.df[,-1], na.action=na.omit, scale. = TRUE)
 plot(pca1, main =paste("Scree Plot for", tie.type.1))
 paste("Percentage of variance for PCs in order: ",paste(round(100*(pca1$sdev^2)/sum(pca1$sdev^2),1),collapse="%, "),"%",sep="")
 pca1$rotation   # loadings
-biplot(pca1, xlabs=m1.df[,1],cex=0.5, main=tie.type.1)
+biplot(pca1, xlabs=m1.df[,1],cex=0.7, main=paste(tie.type.1, "group", group1))
 ```
 
 ```{r echo=echo.flag}
@@ -122,15 +137,15 @@ pca2 = prcomp(formula=~., data=m2.df, na.action=na.omit, scale. = TRUE)
 plot(pca2)
 paste("Percentage of variance for PCs in order: ",paste(round(100*(pca2$sdev^2)/sum(pca2$sdev^2),1),collapse="%, "),"%",sep="")
 pca2$rotation   # loadings
-biplot(pca2, xlabs=m1.df[,1],cex=0.5, main=tie.type.2)
+biplot(pca2, xlabs=m1.df[,1],cex=0.7, main=paste(tie.type.2, "group", group2))
 ```
 
 ```{r echo=FALSE}
 # saves useful data
 name<-paste("Tie Type Correlation",courseID,sep=" - ")
-fname<-paste("data/",name, ".RData", sep="")
+fname<-paste("data/",name,group, ".RData", sep="")
 metadata<-list(project=basename(getwd()), origin=name, created=date())
-save(list=c("m1.df", "m2.df", "sim1.df", "sim2.df", "tie.type.1", "tie.type.2", "pca1","pca2"),
+save(list=c("m1.df", "m2.df", "sim1.df", "sim2.df", "tie.type.1", "tie.type.2", "thd.thresh" "pca1","pca2"),
      file=fname)
 cat(paste("Saved to",fname,"\r\n"))
 ```
