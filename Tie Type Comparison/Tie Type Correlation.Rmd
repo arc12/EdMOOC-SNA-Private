@@ -61,8 +61,8 @@ summary(ig2)
 
 For comparison, a simulated network is generated with the same number of nodes and edges using Erdos-Renyi generation rules. The generator rules are that edges are randomly distributed.
 ```{r echo=echo.flag, message=FALSE}
-ig3<-erdos.renyi.game(vcount(ig1), ecount(ig1), type="gnm", directed=T)
-ig4<-erdos.renyi.game(vcount(ig2), ecount(ig2), type="gnm", directed=F)
+ig3<-erdos.renyi.game(vcount(ig1), ecount(ig1), type="gnm", directed=is.directed(ig1))
+ig4<-erdos.renyi.game(vcount(ig2), ecount(ig2), type="gnm", directed=is.directed(ig2))
 ```
 
 ```{r echo=echo.flag}
@@ -145,7 +145,7 @@ biplot(pca2, xlabs=m1.df[,1],cex=0.7, main=paste(tie.type.2, "group", group2))
 name<-paste("Tie Type Correlation",courseID,sep=" - ")
 fname<-paste("data/",name,group, ".RData", sep="")
 metadata<-list(project=basename(getwd()), origin=name, created=date())
-save(list=c("m1.df", "m2.df", "sim1.df", "sim2.df", "tie.type.1", "tie.type.2", "thd.thresh" "pca1","pca2"),
+save(list=c("m1.df", "m2.df", "sim1.df", "sim2.df", "tie.type.1", "tie.type.2", "thd.thresh", "pca1","pca2"),
      file=fname)
 cat(paste("Saved to",fname,"\r\n"))
 ```
