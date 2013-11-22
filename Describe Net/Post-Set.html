@@ -1,13 +1,10 @@
 <!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
 <title>Post-Set Network Level Description</title>
-
-
-
-
 
 <style type="text/css">
 body, td {
@@ -49,7 +46,7 @@ a:visited {
    color: rgb(50%, 0%, 50%);
 }
 
-pre {   
+pre {	
    margin-top: 0;
    max-width: 95%;
    border: 1px solid #ccc;
@@ -64,18 +61,8 @@ code.r, code.cpp {
    background-color: #F8F8F8;
 }
 
-table {
-   max-width: 95%;
-   border: 1px solid #ccc;
-}
- 
-th {
-  background-color: #000000;
-  color: #ffffff;
-}
- 
-td {
-  background-color: #dcdcdc;
+table, td, th {
+  border: none;
 }
 
 blockquote {
@@ -144,18 +131,40 @@ hr {
       page-break-after: avoid; 
    }
 }
+
 </style>
+
+
 
 
 
 </head>
 
 <body>
+<style type="text/css">
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+</style>
+
 <h1>Post-Set Network Level Description</h1>
 
 <p>The assumption of &ldquo;Poster-Set&rdquo; is that a tie between individuals is defined by the group of people who contributed a post and any comments. All these people have a tie so this is an undirected network. Ties are are <strong>not</strong> weighted by the number of comments by the same person and self-commenting (loops) are ignored.</p>
 
 <p><strong>Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).</strong></p>
+
+<pre><code>## Saved to P-Set.RData 
+</code></pre>
 
 <table><thead>
 <tr>
@@ -243,6 +252,9 @@ hr {
 
 <h2>Inspect the Introductions Forums Only</h2>
 
+<pre><code>## Saved to P-Set I.RData 
+</code></pre>
+
 <table><thead>
 <tr>
 <th align="left">id</th>
@@ -256,7 +268,7 @@ hr {
 </tr>
 </thead><tbody>
 <tr>
-<td align="left">aiplanI</td>
+<td align="left">aiplan</td>
 <td align="center">34</td>
 <td align="left">12</td>
 <td align="center">21.3904</td>
@@ -266,7 +278,7 @@ hr {
 <td align="center">0.0612</td>
 </tr>
 <tr>
-<td align="left">astroI</td>
+<td align="left">astro</td>
 <td align="center">2292</td>
 <td align="left">6652</td>
 <td align="center">2.5336</td>
@@ -276,7 +288,7 @@ hr {
 <td align="center">0.0235</td>
 </tr>
 <tr>
-<td align="left">critI</td>
+<td align="left">crit</td>
 <td align="center">1493</td>
 <td align="left">2630</td>
 <td align="center">2.3613</td>
@@ -286,7 +298,7 @@ hr {
 <td align="center">0.0221</td>
 </tr>
 <tr>
-<td align="left">edcI</td>
+<td align="left">edc</td>
 <td align="center">293</td>
 <td align="left">90</td>
 <td align="center">2.1039</td>
@@ -296,7 +308,7 @@ hr {
 <td align="center">0.0265</td>
 </tr>
 <tr>
-<td align="left">equineI</td>
+<td align="left">equine</td>
 <td align="center">5101</td>
 <td align="left">6026</td>
 <td align="center">0.4633</td>
@@ -306,7 +318,7 @@ hr {
 <td align="center">0.0175</td>
 </tr>
 <tr>
-<td align="left">introI</td>
+<td align="left">intro</td>
 <td align="center">4535</td>
 <td align="left">10080</td>
 <td align="center">0.9805</td>
@@ -317,6 +329,86 @@ hr {
 </tr>
 </tbody></table>
 
+<h2>Inspect Forums Except Introductions</h2>
+
+<pre><code>## Saved to P-Set noI.RData 
+</code></pre>
+
+<table><thead>
+<tr>
+<th align="left">id</th>
+<th align="center">nodes</th>
+<th align="left">edges</th>
+<th align="center">graph density*1000</th>
+<th align="left">diameter</th>
+<th align="center">degree</th>
+<th align="left">closeness</th>
+<th align="center">betweenness</th>
+</tr>
+</thead><tbody>
+<tr>
+<td align="left">aiplan</td>
+<td align="center">481</td>
+<td align="left">280</td>
+<td align="center">2.4255</td>
+<td align="left">10</td>
+<td align="center">0.1712</td>
+<td align="left">0.0017</td>
+<td align="center">0.1355</td>
+</tr>
+<tr>
+<td align="left">astro</td>
+<td align="center">2797</td>
+<td align="left">3877</td>
+<td align="center">0.9915</td>
+<td align="left">15</td>
+<td align="center">0.0269</td>
+<td align="left">0.0004</td>
+<td align="center">0.0297</td>
+</tr>
+<tr>
+<td align="left">crit</td>
+<td align="center">3952</td>
+<td align="left">2033</td>
+<td align="center">0.2604</td>
+<td align="left">15</td>
+<td align="center">0.0213</td>
+<td align="left">0.0002</td>
+<td align="center">0.0381</td>
+</tr>
+<tr>
+<td align="left">edc</td>
+<td align="center">2440</td>
+<td align="left">3102</td>
+<td align="center">1.0425</td>
+<td align="left">11</td>
+<td align="center">0.0326</td>
+<td align="left">0.0005</td>
+<td align="center">0.0466</td>
+</tr>
+<tr>
+<td align="left">equine</td>
+<td align="center">2851</td>
+<td align="left">3736</td>
+<td align="center">0.9196</td>
+<td align="left">11</td>
+<td align="center">0.0588</td>
+<td align="left">0.0004</td>
+<td align="center">0.0724</td>
+</tr>
+<tr>
+<td align="left">intro</td>
+<td align="center">4374</td>
+<td align="left">6673</td>
+<td align="center">0.6977</td>
+<td align="left">13</td>
+<td align="center">0.0373</td>
+<td align="left">0.0003</td>
+<td align="center">0.0544</td>
+</tr>
+</tbody></table>
+
 </body>
 
 </html>
+

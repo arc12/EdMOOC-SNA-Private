@@ -1,13 +1,10 @@
 <!DOCTYPE html>
+<!-- saved from url=(0014)about:internet -->
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 
 <title>Poster-Commenter Network Level Description</title>
-
-
-
-
 
 <style type="text/css">
 body, td {
@@ -49,7 +46,7 @@ a:visited {
    color: rgb(50%, 0%, 50%);
 }
 
-pre {   
+pre {	
    margin-top: 0;
    max-width: 95%;
    border: 1px solid #ccc;
@@ -64,18 +61,8 @@ code.r, code.cpp {
    background-color: #F8F8F8;
 }
 
-table {
-   max-width: 95%;
-   border: 1px solid #ccc;
-}
- 
-th {
-  background-color: #000000;
-  color: #ffffff;
-}
- 
-td {
-  background-color: #dcdcdc;
+table, td, th {
+  border: none;
 }
 
 blockquote {
@@ -144,13 +131,32 @@ hr {
       page-break-after: avoid; 
    }
 }
+
 </style>
+
+
 
 
 
 </head>
 
 <body>
+<style type="text/css">
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+</style>
+
 <h1>Poster-Commenter Network Level Description</h1>
 
 <p>The assumption of &ldquo;Poster-Commenter&rdquo; that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are <strong>not</strong> weighted by the number of comments. Self-commenting (loops) are ignored; self-comments may indicate a discussion with a prior commenter, which may be of interest to a more detailed look at interaction patters.</p>
@@ -158,6 +164,9 @@ hr {
 <p><strong>Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).</strong></p>
 
 <p><em>Could look at setting the tie threshold &gt;1, in which case things get a lot more sparse</em></p>
+
+<pre><code>## Saved to P-C.RData 
+</code></pre>
 
 <table><thead>
 <tr>
@@ -265,6 +274,9 @@ hr {
 
 <h2>Inspect the Introductions Forums Only</h2>
 
+<pre><code>## Saved to P-C I.RData 
+</code></pre>
+
 <table><thead>
 <tr>
 <th align="left">id</th>
@@ -282,7 +294,7 @@ hr {
 </tr>
 </thead><tbody>
 <tr>
-<td align="left">aiplanI</td>
+<td align="left">aiplan</td>
 <td align="center">34</td>
 <td align="left">4</td>
 <td align="center">3.5651</td>
@@ -296,7 +308,7 @@ hr {
 <td align="center">4</td>
 </tr>
 <tr>
-<td align="left">astroI</td>
+<td align="left">astro</td>
 <td align="center">2292</td>
 <td align="left">1265</td>
 <td align="center">0.2409</td>
@@ -310,7 +322,7 @@ hr {
 <td align="center">1155</td>
 </tr>
 <tr>
-<td align="left">critI</td>
+<td align="left">crit</td>
 <td align="center">1493</td>
 <td align="left">273</td>
 <td align="center">0.1226</td>
@@ -324,7 +336,7 @@ hr {
 <td align="center">247</td>
 </tr>
 <tr>
-<td align="left">edcI</td>
+<td align="left">edc</td>
 <td align="center">293</td>
 <td align="left">42</td>
 <td align="center">0.4909</td>
@@ -338,7 +350,7 @@ hr {
 <td align="center">34</td>
 </tr>
 <tr>
-<td align="left">equineI</td>
+<td align="left">equine</td>
 <td align="center">5101</td>
 <td align="left">1150</td>
 <td align="center">0.0442</td>
@@ -352,7 +364,7 @@ hr {
 <td align="center">1021</td>
 </tr>
 <tr>
-<td align="left">introI</td>
+<td align="left">intro</td>
 <td align="center">4535</td>
 <td align="left">1349</td>
 <td align="center">0.0656</td>
@@ -370,3 +382,4 @@ hr {
 </body>
 
 </html>
+

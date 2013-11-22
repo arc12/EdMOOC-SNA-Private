@@ -1,3 +1,19 @@
+<style type="text/css">
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+</style>
+
 Poster-Commenter Network Level Description
 ========================================================
 
@@ -9,6 +25,7 @@ _Could look at setting the tie threshold >1, in which case things get a lot more
 
 ```{r echo=FALSE, results='hide'}
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+group<-""
 tie.type="P-C" #poster-commenter filename prefix
 echo.flag<-TRUE #echo R source
 fig.width.default<-5
@@ -34,7 +51,7 @@ Nodes are people and edges are poster-commenter relationships. The density is th
 ## Inspect the Introductions Forums Only
 ```{r echo=FALSE, results='hide'}
 # data for Introductions has I following the course names
-courseIDs<-c("aiplanI","astroI","critI","edcI","equineI","introI")
+group<-"I"
 ```
 
 ```{r ref.label="INIT", echo=FALSE}

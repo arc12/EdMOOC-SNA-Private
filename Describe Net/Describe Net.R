@@ -19,7 +19,7 @@ library("igraph")
 store.dir<-"~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Network Data/" #where to store the extracted network to
 
 # load graphml into igraph objects
-igraphList<-lapply(courseIDs, function(x){read.graph(paste(store.dir,tie.type," ", x,".graphml",sep=""), format="graphml")})
+igraphList<-lapply(courseIDs, function(x){read.graph(paste(store.dir,tie.type," ", x,group,".graphml",sep=""), format="graphml")})
 # igraphList<-list()
 # for(i in 1:length(courseIDs)){
 #    igraphList[[i]]<-read.graph(paste(store.dir,tie.type," ", courseIDs[i],".graphml",sep=""), format="graphml")
@@ -63,6 +63,17 @@ if(directed.net){
    colnames(singles.df)<-c("nodes","edges","graph density*1000","diameter", "degree","closeness","betweenness")
 }
 row.names(singles.df)<-courseIDs
+
+# save the results. Useful for the larger, more dense, networks
+if(group!=""){
+   fname<-paste(tie.type, " ", group, ".RData", sep="")
+}else{
+   fname<-paste(tie.type, group, ".RData", sep="")
+}
+
+metadata<-list(project=basename(getwd()), created=date())
+save(list=c("metadata", "singles.df", "tie.type", "group"), file=fname)
+cat(paste("Saved to",fname,"\r\n"))
 
 ## ***Made available using the The MIT License (MIT)***
 #The MIT License (MIT)

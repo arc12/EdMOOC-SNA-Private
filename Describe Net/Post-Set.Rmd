@@ -1,3 +1,19 @@
+<style type="text/css">
+table {
+   max-width: 95%;
+   border: 1px solid #ccc;
+}
+ 
+th {
+  background-color: #000000;
+  color: #ffffff;
+}
+ 
+td {
+  background-color: #dcdcdc;
+}
+</style>
+
 Post-Set Network Level Description
 ========================================================
 
@@ -8,6 +24,7 @@ __Individuals who withdrew (were deleted) are not counted; other analysis will r
 
 ```{r echo=FALSE, results='hide'}
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
+group<-""
 tie.type="P-Set" #filename prefix
 echo.flag<-TRUE #echo R source
 fig.width.default<-5
@@ -38,7 +55,25 @@ Degree, closeness and betweenness for an individual differ as follows:
 ## Inspect the Introductions Forums Only
 ```{r echo=FALSE, results='hide'}
 # data for Introductions has I following the course names
-courseIDs<-c("aiplanI","astroI","critI","edcI","equineI","introI")
+group<-"I"
+```
+
+```{r ref.label="INIT", echo=FALSE}
+#loads library and data from graphml
+```
+
+```{r ref.label="SINGLES", echo=FALSE}
+#network level single quantities
+```
+
+```{r echo=FALSE, results='asis'}
+kable(singles.df, row.names=T, align='c')
+```
+
+## Inspect Forums Except Introductions
+```{r echo=FALSE, results='hide'}
+# data for Introductions has I following the course names
+group<-"noI"
 ```
 
 ```{r ref.label="INIT", echo=FALSE}
