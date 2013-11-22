@@ -16,16 +16,6 @@ td {
 
 ```{r echo=FALSE, message=FALSE}
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
-data<-list()
-for (courseID in courseIDs){
-   name<-paste("Tie Type Correlation",courseID,sep=" - ")
-   load(file=paste("data/",name, ".RData", sep=""))
-   colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
-   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
-   data[[courseID]]<-list(pc=m1.df, pset=m2.df, sim_pc=sim1.df, sim_pset=sim2.df, pca_pc=pca1, pca_pset=pca2)
-}
-rm(m1.df, m2.df, sim1.df, sim2.df, pca1, pca2)
-# access the data using e.g. data$aiplan$pc[,"sqrt_betweenness"] for sqrt betweenness centrality for poster-commenter tie model in aiplan course
 ```
 
 Edinburgh University Coursera MOOC Data Exploring Tie Type and Centrality Measures in Forum Activity Networks - Correlation, Independence and Usefulness
@@ -36,7 +26,7 @@ Background
 -------
 ### Structure of the Forums
 
-In the Coursera courses run from January 28\textsuperscript{th} 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment. Similarly, it is likely that a reply to a post appears as a new post in the thread; the absence of a comment in the foums data does not mean no-one commented or replied. Given the structure of the forums, it would be likely that a reply to the first post in a thread would appear as a new post. In short: both comments and posts may be used to reply to a previous post or comment.
+In the Coursera courses run from January 28^th 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment. Similarly, it is likely that a reply to a post appears as a new post in the thread; the absence of a comment in the foums data does not mean no-one commented or replied. Given the structure of the forums, it would be likely that a reply to the first post in a thread would appear as a new post. In short: both comments and posts may be used to reply to a previous post or comment.
 
 ?? how frequent is it for the 1st reply to the post that starts a thread appears as a post and NOT as a comment ??
 
@@ -88,11 +78,84 @@ Analysis
 
 ### Whole-Network Statistics
 
+```{r echo=FALSE, message=FALSE}
+dir<-getwd()
+setwd("/home/arc1/R Projects/Edinburgh MOOC/EdMOOC-SNA/Describe Net")
+load(file="Whole-T.RData")
+WholeT<-singles.df
+load(file="Whole-T 4.RData")
+WholeT4<-singles.df
+load(file="Whole-T 3.RData")
+WholeT3<-singles.df
+load(file="P-Set.RData")
+PSet<-singles.df
+load(file="P-C.RData")
+PC<-singles.df
+setwd(dir)
+rm(singles.df)
+```
 
+The density figures for each course with each of the three tie models, and with two different thresholds used for Whole-Thread in addition to a no-threshold run, are shown below. The density, here expressed as a percentage, is the proportion of the total possible ties that are observed. The number of nodes is the same across all tie models because all people who made a post or comment are always used.
+
+```{r echo=FALSE, results="asis"}
+df<-cbind("No. nodes"=PC[,"nodes"],"P-C Density/%"=PC[,"graph density*1000"]/10,"P-Set Density/%"=PSet[,"graph density*1000"]/10, "W-T Density/% (Thresh=3)"=WholeT3[,"graph density*1000"]/10, "W-T Density/% (Thresh=4)"=WholeT4[,"graph density*1000"]/10, "W-T Density/%"=WholeT[,"graph density*1000"]/10)
+rownames(df)<-rownames(PC)
+kable(df)
+```
+_The tie models are abbreviated: "P-C" denotes Poster-Commenter, "P-Set" denotes Post-Set, and "W-T" denotes Whole-Thread, two of which have a threshold as described above._
+
+The effect on density that was outlined in the description of the different tie models is evident, although it is also clear that there are differences between courses when the same tie model is used. These differences are not simply a direct consequence of network size, by the definition of network density.
+
+The Whole-Thread model with no threshold produces networks of exceptionally high density. E-learning and Digital Cultures has around 1 in 7 of the total possible ties. At this level, it is highly unlikely that any interesting differences between individuals or groups of individuals would be discovered. The range of values between courses is also the least of the three models, less than a factor of three compared with almost a factor of 10 for Whole-Thread with a threshold of three. It is, therefore, less discriminating at the network level also.
+
+The following parallel coordinate plot shows how each of the density measures and the number of nodes vary for each course, with each quantity being separately scaled and fit within the vertical range of the plot. This appears to show that there may be a secondary effect of network size on density; course with more participants do generally have a lower density in the Poster-Commenter tie model. If AI Planning (red line) is discounted, however, the aparrent pattern does not appear.
+
+The parallel coordinate plot is useful because it shows whether the different courses are similarly placed as the tie model changes, i.e. that we would be likely to draw similar conclusions independent of the tie model. The Whole-Thread tie model without a threshold is clearly at odds with the general pattern. The Post-Set and Whole-Thread tie models with a threshold are reasonably similar, and with the exception of AI planning, also similar to Poster-Commenter. It might be tentatively suggested that this difference is grounded in different behaviour in the forums; AI Planning participants may have more explicitly commented-on posts.
+
+
+
+```{r fig.width=6, fig.height=5, echo=FALSE}
+library(MASS)
+df.<-df
+colnames(df.)<-c("nodes","P-C","P-Set","W-T(3)","WT(4)","WT")
+opar<-par(mar=c(5.1, 4.1, 4.1, 5.1), xpd=TRUE)
+parcoord(df., col=rainbow(length(df[,1])), cex=0.5, main="Parallel Coordinate Plot")
+legend("topright",  inset=c(-0.15,0), legend=rownames(df), fill=rainbow(6), cex=0.7)
+par(opar)
+```
+
+In summary: at the network level, all of the tie models appear to be acceptable with the exception of Whole-Thread without a threshold. The Poster-Commenter model stands slightly apart from the other tie models and may be usefully discriminating some directed commenting behaviour, consistent with its definition.
 
 ### Correlation Between Measures
 
-For comparison, a simulated network is generated with the same number of nodes using Erdos-Renyi generation rules. The generator rules are that ties are randomly distributed with a probability of any two nodes being connected equal to that in the observed network.
+```{r echo=FALSE, message=FALSE}
+data_PCPS<-list()
+for (courseID in courseIDs){
+   name<-paste("Tie Type Correlation",courseID,sep=" - ")
+   load(file=paste("data/P-C vs P-Set/",name, ".RData", sep=""))
+   colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
+   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
+   data_PCPS[[courseID]]<-list(pc=m1.df, pset=m2.df, sim_pc=sim1.df, sim_pset=sim2.df, pca_pc=pca1, pca_pset=pca2)
+}
+data_WT3PS<-list()
+for (courseID in courseIDs){
+   name<-paste("Tie Type Correlation",courseID,sep=" - ")
+   load(file=paste("data/Whole-T3 vs P-Set/",name, ".RData", sep=""))
+   colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
+   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
+   data_PCPS[[courseID]]<-list(wt=m1.df, pset=m2.df, sim_wt=sim1.df, sim_pset=sim2.df, pca_wt=pca1, pca_pset=pca2)
+}
+rm(m1.df, m2.df, sim1.df, sim2.df, pca1, pca2)
+# access the data using e.g. data$aiplan$pc[,"sqrt_betweenness"] for sqrt betweenness centrality for poster-commenter tie model in aiplan course
+```
+
+In practice, the different centrality measures for a number of people in a network are unlikely to be independent. Random variation or real-world meso-scale structures both mean that an individual with very high degree centrality, for example, may not also have a very high betweenness centrality. As network size increases, the effect of randomness diminishes but the effect of any real-world structures remains to become more visible as the variance due to the random effects decreaases.
+
+As previously mentioned, a desirable tie model permits discrimination of meso-scale structure. This motivates an inspection of the extent to which the different tie models reveal deviations from randomness in the observed networks.
+
+For comparison, a simulated network is generated with ties assigned randomly such that the probability of any two nodes being connected equal is to that in the observed network. In this case, "randomly" means that the probability of two nodes being connected is independent of node attributes and their prior ties and position in the network. This is referred to as an Erdős–Rényi model network.
+
+
 
 Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
 
