@@ -14,17 +14,11 @@ td {
 }
 </style>
 
-Whole-Thread Tie Model Network Level Description
-========================================================
-
-The assumption is similar to Post-Set but a tie is defined as being between all people who contributed to a thread. 
-
-__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
-
-
 ```{r echo=FALSE, results='hide'}
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
-group<-""
+# threshold for minimum number of contributions to a thread by a person for them to be included
+thd.thresh<-3
+group<-thd.thresh
 tie.type="Whole-T" #filename prefix
 echo.flag<-TRUE #echo R source
 fig.width.default<-5
@@ -32,6 +26,13 @@ fig.height.default<-5
 options(knitr.table.format = 'markdown')
 read_chunk("./Describe Net.R")
 ```
+
+Whole-Thread Tie Model Network Level Description
+========================================================
+
+The assumption is similar to Post-Set but a tie is defined as being between all people who contributed at least `r thd.thresh` posts or comments to a thread. 
+
+__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
 
 ```{r INIT, echo=FALSE}
 #loads library and data from graphml
@@ -56,7 +57,7 @@ Degree, closeness and betweenness for an individual differ as follows:
 ## Inspect the Introductions Forums Only
 ```{r echo=FALSE, results='hide'}
 # data for Introductions has I following the course names
-group<-"I"
+group<-paste("I",thd.thresh,sep="")
 ```
 
 ```{r ref.label="INIT", echo=FALSE}
@@ -74,7 +75,7 @@ kable(singles.df, row.names=T, align='c')
 ## Inspect Forums Other Than Introductions
 ```{r echo=FALSE, results='hide'}
 # data for Introductions has I following the course names
-group<-"noI"
+group<-paste("noI",thd.thresh,sep="")
 ```
 
 ```{r ref.label="INIT", echo=FALSE}
