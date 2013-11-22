@@ -36,22 +36,40 @@ Background
 -------
 ### Structure of the Forums
 
-In the Coursera courses run from January 28\textsuperscript{th} 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment.
+In the Coursera courses run from January 28\textsuperscript{th} 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment. Similarly, it is likely that a reply to a post appears as a new post in the thread; the absence of a comment in the foums data does not mean no-one commented or replied. Given the structure of the forums, it would be likely that a reply to the first post in a thread would appear as a new post. In short: both comments and posts may be used to reply to a previous post or comment.
+
+?? how frequent is it for the 1st reply to the post that starts a thread appears as a post and NOT as a comment ??
+
+Data on what people read in the forums is only recorded at the level of the thread; it is not possibe to determine which of the various posts in a given thread were actually read, if any.
 
 ### Defining the Activity Networks
 
 In order to translate patterns of activity into some kind of network for analysis, it is necessary to define a rule for what decides a connection between people and to give an interpretation of what a connection means. In what follows, following social network analysis conventions, the word "tie" is used to refer to the connections that are inferred from forum activity data and the word "node" will usually be used to refer to a person in the network.
 
-The nature of the forum activity data limits the kinds of statement that may reasonably be made from it about connections between people. Given this fact, a tie should be interpreted as indicating two people have a common interest in a particular piece of text, although this common interest may be a dispute. In the analysis presented here, no attempt is made to translate this to a common interest in a topic; i.e. there is no mapping between pieces of text according to their subject matter.
+The nature of the forum activity data limits the kinds of statement that may reasonably be made from it about connections between people. Given this fact, a tie should be interpreted as indicating two people have a common interest in some text, although this common interest may be a dispute. In the analysis presented here, no attempt is made to translate this to a common interest in a topic; i.e. there is no mapping between pieces of text according to their subject matter.
 
-Two models for what constitues a tie have been explored.
+Three models for what constitues a tie have been explored.
 
-**Poster-Commentre**
+**Poster-Commenter**  
 The assumption of "Poster-Commenter" that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments. Self-commenting (loops) are ignored; self-comments may indicate a discussion with a prior commenter, which may be of interest to a more detailed look at interaction patters.
 
-**Post-Set**
-The assumption of "Poster-Set" is that a tie between individuals is defined by the group of people who contributed a post and any comments. All these people have a tie so this is an undirected network. Ties are are **not** weighted by the number of comments by the same person and self-commenting (loops) are ignored.
+**Post-Set**  
+The assumption of "Poster-Set" is that a tie between individuals is defined by the group of people who contributed a post and any comments. All these people have a tie so this is an undirected network. Ties are are not weighted by the number of comments by the same person and self-commenting (loops) are ignored.
 
+**Whole-Thread**  
+The assumption is similar to Post-Set but a tie is defined as being between all people who contributed at least a threshold number of posts or comments to a thread. 
+
+These three models represent different points in a trade-off between a desire to extract information that differentiates individuals with a recognition that the structure of the forums, and the behaviour promoted by this structure and its presentation, partially obscures the information needed to discriminate. In particular, the empirical fact that posts and comments are sometimes used interchangably means that the semantic difference between them only applies on aggregate and not necessarily at the level of individuals. Some aspects of the trade-off conclude this section.
+
+**Whole-Thread** represents a total neglect of difference between posts and comments. It has the advantage of being at the same level of aggreagation as forum reading, which is recorded at thread level, corresponding with web page presentation. It also has the advatange of avoiding spurious attribution of effect to comments _vs_ posts but the disadvantage that it obliterates any such effect. In the absence of a threshold, people are more likely to be connected than for the other tie models simply because there are more contributions to a thread than comments on a single post. This model will naturally lead to quite dense networks if the threshold is one contribution and brings a notable computational disadvantage; storing the network to disk for further processing requires multi-megabyte files and processing times are in the tens of minutes per course. A threshold of 1 risks causing a very homogeneous network in which most people who contributed more than once have fairly similar network environments but larger thresholds offer an opportunity to be more discriminating and to local meso-scale structures.
+
+Although not considered in this report, the Whole-Thread tie model could be modified to include a weighting factor on the ties according to some function of the number different threads in which a user exceeds the inclusion threshold. This would allow a better differentiation between individuals when centrality measures are calculated and could be used with a threshold to simplify network visualisations. 
+
+**Post-Set** assumes that a post is the unit of activity but does not differentiate between comments and the parent post when assigning ties. It has the disadvantage that it will fail to account for posts that are really in reply to another post but has the advantage that it will recover more of the difference between interests. A post with many comments will lead to a very dense region in the network. The network as a whole will be less dense than Whole-Thread; this will ease computation and could lead to a less homogeneous network, hence more differentiation.
+
+**Poster-Commenter** aims to recover more information than a common interest in some text by encoding the idea of "in reply to". While we know that not all replies appear as comments and that not all comments are replies, it is not the case that all comments are not replies. This method has the disadvantage that, for people who make few contributions, the network statistics calculated for them are unreliable, but the advantage that it may be able to expose active reciprocation. A Poster-Commenter network will be the most sparse since there will be no tie between two commenters on a post. Although Poster-Commenter is attractive in that it encodes behaviour that is closer to the intentions of forum contributors, the reality of what is captured in the data raises serious questions about the validity of this tie model at the level of the individual. It may, however, still provide useful statistics at the level of a course or forum.
+
+The key question to ask is whether these tie models permit meaningful difference in various measures to be determined, whether these differences relate to per-person properties, meso-scale network structures, or whole-network character.
 
 ### Centrality Measures Used
 
@@ -61,13 +79,16 @@ Three centrality measures are considered.
 * **Betweenness** captures the extent to which paths between nodes pass through a given node (when taking the shortest path). An individual with a high betweenness centrality will be found to connect one or more groups. Betweenness is an important concept when considering brokerage of ideas between two groups and the influence this may confer. In the context of MOOC forums, which are open to all participants, betweenness is better seen as an indicator of the breadth of activity of an individual **relative** to other course participants. 
 * **Eigenvector** centrality aims to weight the centrality measure for an individual according to the centrality of people near to them. Individuals with high eigenvector centrality are embedded in dense parts of a network. Such individuals are expected to have a relatively high degree centrality but the reverse is not true; a person with high degree that is connected to many people with low degree will have low eigenvector centrality. In the context of MOOC forums, high eigenvector centrality is likely to indicate exposure to the widest range of ideas expressed in the forums because ideas are likely to be passed on, augmented, reworked, etc between different forums, posts and threads.
 
-
 All of these measures can be calculated either taking account of the direction of ties, in directed networks, or ignoring direction. The undirected measures will be used for comparison, since the "Post-Set" tie model gives an undirected network.
 
 Closeness centrality is not used because the values show little spread (in practice, only a few distinct values are seen).
 
 Analysis
 -------
+
+### Whole-Network Statistics
+
+
 
 ### Correlation Between Measures
 
@@ -84,6 +105,8 @@ For reference: an individual with no ties in aiplan gets an eigenvector centrali
 Notes on interpretation:
 * on the whole, we look at PCA here to summarise non-independence between the centrality measures rather than to select primary components.
 * when there are many components, selection often chooses PCs to th eleft of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables.
+
+### A Closer Look at the Whole-Thread Threshold
 
 ### A Closer Look at Clusters in Eigenvector Centrality
 
@@ -106,6 +129,12 @@ Conclusions
 ### Selection of Tie Model and Centrality Measure
 
 ### Character of the Networks
+
+### Alternatives
+
+weighted Whole-Thread
+
+Bipartitie thread:person
 
 Reference Material
 --------
