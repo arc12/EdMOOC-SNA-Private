@@ -105,8 +105,8 @@ edgeList.sql <-"SELECT DISTINCT fc.forum_user_id node1, fp.forum_user_id node2
                      FROM **for.forum_comments fc, **for.forum_posts fp WHERE fc.post_id = fp.id
                   UNION DISTINCT
                   SELECT DISTINCT fc1.forum_user_id node1, fc2.forum_user_id node2
-                     FROM **for.forum_comments fc1, **for.forum_comments fc2
-                        WHERE fc1.post_id = fc2.post_id
+                     FROM **for.forum_comments fc1, **for.forum_comments fc2, **for.forum_posts fp
+                        WHERE fc1.post_id = fc2.post_id AND fp.id = fc1.post_id
                            AND fc1.forum_user_id > fc2.forum_user_id" #last bit removes mirror and self cases
 
 # Use a union of poster and commenter ids to identify nodes.
@@ -140,6 +140,13 @@ nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, no
 edgeList<-list.limit.SELECT(db, courseIDs, edgeList.sql, intoductions.forumIDs, echo=echo.sql)
 nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
 worker("I")
+
+limitClause<- "AND fp.thread_id NOT IN (SELECT ft.id FROM **for.forum_threads ft WHERE forum_id = ##)"
+edgeList.sql<-paste(edgeList.sql, limitClause)
+nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, nodeList.sql.c)
+edgeList<-list.limit.SELECT(db, courseIDs, edgeList.sql, intoductions.forumIDs, echo=echo.sql)
+nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
+worker("noI")
 
 #end tidily
 dbDisconnect(db)

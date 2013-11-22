@@ -130,6 +130,13 @@ edgeList<-list.limit.SELECT(db, courseIDs, edgeList.sql, intoductions.forumIDs, 
 nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
 worker("I")
 
+limitClause<- "AND fp.thread_id NOT IN (SELECT ft.id FROM **for.forum_threads ft WHERE forum_id = ##)"
+edgeList.sql<-paste(edgeList.sql.a, limitClause, edgeList.sql.b)
+nodeList.sql<-paste(nodeList.sql.a, limitClause, nodeList.sql.b, limitClause, nodeList.sql.c)
+edgeList<-list.limit.SELECT(db, courseIDs, edgeList.sql, intoductions.forumIDs, echo=echo.sql)
+nodeList<-list.limit.SELECT(db, courseIDs, nodeList.sql, intoductions.forumIDs, echo=echo.sql)
+worker("noI")
+
 #end tidily
 dbDisconnect(db)
 
