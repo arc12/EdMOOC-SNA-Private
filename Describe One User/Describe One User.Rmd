@@ -11,7 +11,7 @@ library("network")
 Forum Connections for User: `r courseID` - `r forum_user_id`
 ========================================================
 
-Describe the network and posts/comments of a single user. This uses the poster-commenter (directed) tie definition. The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments.
+Describe the network and posts/comments of a single user. It could be called an "ego network" or "1-step network". This uses the poster-commenter (directed) tie definition. The assumption of the following that a tie between individuals is defined by a comment on a post. This is a directed tie from the commenter to the poster. A tie is assumed if there are 1 or more comments and ties are **not** weighted by the number of comments.
 
 ```{r  echo=FALSE}
 #loads RData file containiing network object and metadata
