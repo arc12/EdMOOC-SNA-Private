@@ -8,10 +8,10 @@ library(markdown)
 # causes it to fail to find file. Also get figures directory in wrong place without setwd()
 setwd("~/R Projects/Edinburgh MOOC/EdMOOC-SNA/Tie Type Comparison")
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
-tie.type.1<-"Whole-T"
+tie.type.1<-"P-C"
 tie.type.2<-"P-Set"
 group<-""
-thd.thresh<-4 #ONLY applicable to tie.type = "Whole-T"
+thd.thresh<-3 #ONLY applicable to tie.type = "Whole-T"
 
 dir.create("data", showWarnings=F)
 

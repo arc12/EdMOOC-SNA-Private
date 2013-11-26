@@ -48,7 +48,7 @@ Data for the whole course run is used. This means that we should expect people w
 
 Square root transformation is applied to the centrality measures to compress their long-tails.
 
-Isolates are removed. Specifically, nodes that are isolates in both are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation. 
+Isolates are removed. Specifically, nodes that are isolates in **either** of the two tie models are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation. Eliminating isolates in either set rather than those people who are isolates in both sets will influence inter-set correlation tests but these are less instructive.
 
 There are a small number of people who have zero degree in P-C but non-zero in P-Set (1-2% by inspection). This is thought to arise from cases where a poster withdrew and was removed from the users table. Edges to deleted people are removed (we cannot know their role or geographical region) but the effect of this differs for different tie type definitiions. For P-C, it can lead to commenters who were connected to a withdrawn poster being left as isolates. The same will happen for P-Set when there is only a single commenter, but when there is more than one non-withdrawn commenter, these commenters WILL have a tie. Hence they will have non-zero degree in exactly the same posting-commenting scenario.
 
@@ -89,7 +89,7 @@ m2.df<-data.frame(sqrt_degree2=sqrt(degree(ig2, mode="all", loops=FALSE)),
 m2.df<-m2.df[rownames(m1.df),]
 #eliminate isolates (see markdown text above).
 #done before cbind so each can be m1, m2 can be used separately
-non.isolates.mask<-(m1.df[,"sqrt_degree1"]!=0) | (m2.df[,"sqrt_degree2"]!=0)
+non.isolates.mask<-(m1.df[,"sqrt_degree1"]!=0) & (m2.df[,"sqrt_degree2"]!=0)
 m2.df<-m2.df[non.isolates.mask,]
 m1.df<-m1.df[non.isolates.mask,]
 #
