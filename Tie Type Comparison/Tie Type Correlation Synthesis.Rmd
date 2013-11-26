@@ -163,9 +163,9 @@ For example, the following plots show Erdős–Rényi networks to match the node
 
 ```{r  fig.width=4, fig.height=4, echo=FALSE, results='hold', warning=FALSE}
 sim<-data_PCPS[["astro"]][["sim_pset"]]
-plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Erdős–Rényi Network", cex=0.6)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Network", cex=0.6)
 mtext("(matching Astrobiology Post-Set node & edge count)", cex=0.9)
-plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Erdős–Rényi Network", cex=0.6)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Network", cex=0.6)
 mtext("(matching Astrobiology Post-Set node & edge count)", cex=0.9)
 ```
 
@@ -173,13 +173,15 @@ The essentially uniform nature of an Erdős–Rényi network means that there is
 
 The equivalent plots for the Whole-Thread (threshold=3) case, which has the same number of nodes (`r WholeT3["astro","nodes"]`) but fewer ties (`r WholeT3["astro","edges"]` compared to `r as.character(PSet["astro","edges"])`), illustrates the non-independence of the measures while also showing it to be less well-defined.
 
+
 ```{r  fig.width=4, fig.height=4.5, echo=FALSE, results='hold', warning=FALSE}
 sim<-data_WT3PS[["astro"]][["sim_wt"]]
-plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Erdős–Rényi Network", cex=0.6)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Network", cex=0.6)
 mtext("(matching Astrobiology Whole-Thread node & edge count)", cex=0.9)
-plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Erdős–Rényi Network", cex=0.6)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Network", cex=0.6)
 mtext("(matching Astrobiology Whole-Thread node & edge count)", cex=0.9)
 ```
+
 
 Since these are single simulated networks, they show random variation that would differ from what would be obtained if the simultion were repeated. They do, however, provide a baseline to qualitatively judge whether or not the observed networks contain structures or other evidence of social process, behavioural patterns, etc. This, in turn, permits the tie models to be evaluated for their ability to illuminate such structures. Since the tie models do not contain rules likely to create artificial structures, any evident structure can be assumed to be real, but subject to limitations of what may be inferred from them as discussed in the description of the tie type models.
 
@@ -187,7 +189,7 @@ Since these are single simulated networks, they show random variation that would
 
 The three centrality measures are considered for each of the three tie models, with a threshold of three being chosen for the Whole-Thread model as a sensible mid-point between the over-dense nature of the threshold-free case and the rather sparse case when the threshold is four. For some network analysis questions, a higher threshold might be useful to "tune in" to peaks of activity but a side-by-side comparison of the tie models will be aided if the network densities are broadly similar.
 
-Astrobiology is chosen for illustration; consult the parallel coordinate plot to see that it is a reasonable estimate for the median case in terms of the combined set of attributes. The following plots show how each pair of measures correspond for each node (person) in the network. Note that the scales differ between each tie model. The plots corresponding to the simulations appear in the middle of the top and bottom rows, for which `r expression(sqrt("betweenness"))` is the horizontal axis.
+Astrobiology is chosen for illustration; consult the parallel coordinate plot to see that it is a reasonable estimate for the median case in terms of the combined set of attributes. The following plots show how each pair of measures correspond for each node (person) in the network. Note that the scales differ between each tie model. The plots corresponding to the simulations appear in the middle of the top and bottom rows, for which $\sqrt{betweenness}$ is the horizontal axis.
 
 ```{r echo=FALSE}
 WT<-data_WT3PS[["astro"]][["wt"]][-1]#-1 removes role column
@@ -223,7 +225,8 @@ Although caution should be exercised with interpreting correlation coefficients 
 PC_corr<-cor(data_PCPS$astro$pc[,-1], use="complete.obs", method="spearman")
 PS_corr<-cor(data_PCPS$astro$pset, use="complete.obs", method="spearman")
 WT_corr<-cor(data_WT3PS$astro$wt[,-1], use="complete.obs", method="spearman")
-WTsim_corr<- cor(sim<-data_WT3PS$astro$sim_wt, use="complete.obs", method="spearman")
+sim_tmp<-sim<-data_WT3PS$astro$sim_wt #used to remove isolates, since observed cases have had them removed
+WTsim_corr<- cor(sim_tmp[(sim_tmp$sqrt_degree!=0),], use="complete.obs", method="spearman")
 df<-rbind(
       t(c("degree:betweenness"=PC_corr["sqrt_degree","sqrt_betweenness"],
         "degree:eigenvector"=PC_corr["sqrt_degree","sqrt_eigenvector"],
@@ -231,22 +234,21 @@ df<-rbind(
       
       t(c("degree:betweenness"=PS_corr["sqrt_degree","sqrt_betweenness"],
         "degree:eigenvector"=PS_corr["sqrt_degree","sqrt_eigenvector"],
-        "beteenness:eigenvector"=PS_corr["sqrt_betweenness","sqrt_eigenvector"])),
+        "betweenness:eigenvector"=PS_corr["sqrt_betweenness","sqrt_eigenvector"])),
       
       t(c("degree:betweenness"=WT_corr["sqrt_degree","sqrt_betweenness"],
         "degree:eigenvector"=WT_corr["sqrt_degree","sqrt_eigenvector"],
-        "beteenness:eigenvector"=WT_corr["sqrt_betweenness","sqrt_eigenvector"])),
+        "betweenness:eigenvector"=WT_corr["sqrt_betweenness","sqrt_eigenvector"])),
       
       
       t(c("degree:betweenness"=WTsim_corr["sqrt_degree","sqrt_betweenness"],
         "degree:eigenvector"=WTsim_corr["sqrt_degree","sqrt_eigenvector"],
-        "beteenness:eigenvector"=WTsim_corr["sqrt_betweenness","sqrt_eigenvector"])))
+        "betweenness:eigenvector"=WTsim_corr["sqrt_betweenness","sqrt_eigenvector"])))
 
 rownames(df)<-c("Poster-Commenter","Post-Set","Whole-Thread(3)","Simulated (W-T)")
 kable(df)
 ```
 _Spearman rank correlation values for square root centrality measures_
-
 
 The tentative conclusion drawn from the above is that betweenness centrality and one of degree or eigenvector centrality - using the Whole-Thread tie model with a threshold of three - would provide the most useful parsimonious set of statistics.
 
@@ -254,14 +256,26 @@ The tentative conclusion drawn from the above is that betweenness centrality and
 
 Principal Component Analysis (PCA) is a widely used approach to deal with multiple attributes which may have strong dependency between them. It is commonly used to reduce from many partially-dependent attributes to a smaller number of mutually-independent attributes by taking linear combinations of the original attributes; the linear combinations are ranked according to the extent to which they account for the variation in the data.
 
-In the present case, we do not have a problem that requires this kind of dimensionality reduction but we do have non-independent attributes and an inkling in the above tentative conclusion that only two could be a useful parsimonious set. PCA is used here to summarise non-independence between the centrality measures.
+In the present case, we do not have a problem that requires this kind of dimensionality reduction but we do have non-independent attributes and an inkling in the above tentative conclusion that only two could be a useful parsimonious set. PCA is used here to summarise non-independence between the centrality measures and to further investigate this aspect of the tentative conclusion.
 
+Considering the case of the Whole-Thread tie model with a threshold of three, three principal components may be derived from the three centrality measures by using the following linear combinations:
 
+```{r echo=FALSE, results="asis"}
+pca<-data_WT3PS$astro$pca_wt
+rot<-pca$rotation
+rownames(rot)<-c("$\\sqrt{degree}$", "$\\sqrt{betweenness}$","$\\sqrt{eigenvector}$")
+kable(rot)
+```
 
+These principal components account for `r paste(paste(round(100 * (pca$sdev^2)/sum(pca$sdev^2), 1), collapse = "%, "), "%", sep = "")` of the variance in the data. Hence, the variation between individuals is largely explained by a single component (PC1) that is composed from approximately equal measures of each centrality measure. This could be described as a broad measure of extent participation. **NB: a PCA should be conducted with the number of contributions as a statistic to determine whether PCA1 is essentially equivalent to it.** The second principal component (PC2) is mostly influenced by the betweenness centrality, which is has a positive weighting in contrast to the negative weighting for eigenvector centrality. This indicates that, for this component, lower values of betweenness centrality are associated with higher values eigenvector centrality and _vice versa_ (it is the relative sign difference that is important). This could be interpreted as a measure of the extent to which a person is embedded in _vs_ between regions of network density, conditional on PCA1.
 
+The following plot shows how individuals are distributed according to the first two primary components. It also shows in red how the centrality measures relate to these two primary components, providing a more visual means of interpreting the previous table.
+```{r fig.width=5, fig.height=6, echo=FALSE}
+biplot(pca, xlabs = rep("+", length(data_WT3PS$astro$wt[,1])), cex = 0.7, main = "The First Two Principle Components", sub="Whole-Thread with threshold=3")
+```
 
- 
-When there are many components, selection often chooses principal components to the left of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables. On the basis of this recipe, we could select one or two principal components for further analysis. This has the distinct disadvantage in that it gives us statistics that are not directly interpretable in terms of ideas such as "degree" or "betweenness". Hence it may be necessary to transform the components back to centrality measure space, or simply to use the centrality measures where their non-independence is not an issue.
+The red vectors emphasise the previously-made comment about betweenness centrality standing relatively distinct from the more-similar other two measures and might suggest that the best choice of two centrality measures out of the three would be degree and betweenness since these most closely align with the first two principal components. The weakness with this approach is that the centrality measures are not independent. An alternative approach, which would be useful when the non-independence is an issue, would be to use PCA1 and PCA2 for further analysis, since together they account for 95% of variance. This has the distinct disadvantage in that it gives us statistics that are not directly interpretable in terms of well-known ideas such as "degree" or "betweenness". Hence it may be necessary to transform the components back to centrality measure space.
+
 
 ### A Closer Look at the Whole-Thread Threshold
 
@@ -272,20 +286,6 @@ Several of the eigenvector centrality plots show one or two separated clusters f
 
 For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
 
-### Technical Notes
-
-Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. People who withdrew do not appear.
-
-__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
-
-
-Square root transformation is applied to the centrality measures to compress their long-tails.
-
-Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
-
-Spearman rank correlation is used with square root measures; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is more suited to skew distributions and more resistant to the effect of outliers than Pearson's but the centrality measures cannot be assumed to conform to the assumptions of the correlation method. It should not be assumed that coefficients are quantitatively meaningful. 
-
-For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Square root measures are used as before.
 
 Conclusions
 ---------
@@ -300,12 +300,29 @@ weighted Whole-Thread
 
 Bipartitie thread:person
 
-Reference Material
+
+Technical Notes
 --------
 
-### Technical
+Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. People who withdrew do not appear.
 
-R[RCore] was used with the following packages: igraph[IGRAPH]
+__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
+
+Square root transformation is applied to the centrality measures to compress their long-tails.
+
+Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
+
+Spearman rank correlation is used with square root measures; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is more suited to skew distributions and more resistant to the effect of outliers than Pearson's but the centrality measures cannot be assumed to conform to the assumptions of the correlation method. It should not be assumed that coefficients are quantitatively meaningful. 
+
+For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Square root measures are used as before.
+
+### Reference Material
+
+R[RCore] was used with the following packages: igraph[IGRAPH], mASS[MASS]
 
 [RCORE]: R Core Team (2013). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria. URL http://www.R-project.org/.  
 [IGRAPH]: Csardi G, Nepusz T: The igraph software package for complex network research, InterJournal, Complex Systems 1695. 2006. http://igraph.sf.net
+[MASS]: Venables, W. N. & Ripley, B. D. (2002) Modern Applied Statistics with S. Fourth Edition. Springer, New
+  York. ISBN 0-387-95457-0
+  
+The source code and intermediate-level output files can be found in Adam Cooper's [EdMOOC-SNA github repository](https://github.com/arc12/EdMOOC-SNA), specifically the content of: "Network Extractors", "Describe Net", and "Tie Type Comparison".
