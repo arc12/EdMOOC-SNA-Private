@@ -129,12 +129,13 @@ In summary: at the network level, all of the tie models appear to be acceptable 
 ### Correlation Between Measures
 
 ```{r echo=FALSE, message=FALSE}
+setwd("/home/arc1/R Projects/Edinburgh MOOC/EdMOOC-SNA/Tie Type Comparison")
 data_PCPS<-list()
 for (courseID in courseIDs){
    name<-paste("Tie Type Correlation",courseID,sep=" - ")
    load(file=paste("data/P-C vs P-Set/",name, ".RData", sep=""))
    colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
-   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
+   colnames(m2.df)<-gsub("2$","",colnames(m2.df), perl=T)
    data_PCPS[[courseID]]<-list(pc=m1.df, pset=m2.df, sim_pc=sim1.df, sim_pset=sim2.df, pca_pc=pca1, pca_pset=pca2)
 }
 data_WT3PS<-list()
@@ -142,10 +143,11 @@ for (courseID in courseIDs){
    name<-paste("Tie Type Correlation",courseID,sep=" - ")
    load(file=paste("data/Whole-T3 vs P-Set/",name, ".RData", sep=""))
    colnames(m1.df)<-gsub("1$","",colnames(m1.df), perl=T)
-   colnames(m2.df)<-gsub("1$","",colnames(m2.df), perl=T)
-   data_PCPS[[courseID]]<-list(wt=m1.df, pset=m2.df, sim_wt=sim1.df, sim_pset=sim2.df, pca_wt=pca1, pca_pset=pca2)
+   colnames(m2.df)<-gsub("2$","",colnames(m2.df), perl=T)
+   data_WT3PS[[courseID]]<-list(wt=m1.df, pset=m2.df, sim_wt=sim1.df, sim_pset=sim2.df, pca_wt=pca1, pca_pset=pca2)
 }
 rm(m1.df, m2.df, sim1.df, sim2.df, pca1, pca2)
+setwd(dir)
 # access the data using e.g. data$aiplan$pc[,"sqrt_betweenness"] for sqrt betweenness centrality for poster-commenter tie model in aiplan course
 ```
 
@@ -153,25 +155,122 @@ In practice, the different centrality measures for a number of people in a netwo
 
 As previously mentioned, a desirable tie model permits discrimination of meso-scale structure. This motivates an inspection of the extent to which the different tie models reveal deviations from randomness in the observed networks.
 
+#### Baseline Simulated Networks
+
 For comparison, a simulated network is generated with ties assigned randomly such that the probability of any two nodes being connected equal is to that in the observed network. In this case, "randomly" means that the probability of two nodes being connected is independent of node attributes and their prior ties and position in the network. This is referred to as an Erdős–Rényi model network.
 
+For example, the following plots show Erdős–Rényi networks to match the node and edge count for the Astrobiology course using a Post-Set tie model. The square root of each measure is plotted to compress the long tails in the distributions.
+
+```{r  fig.width=4, fig.height=4, echo=FALSE, results='hold', warning=FALSE}
+sim<-data_PCPS[["astro"]][["sim_pset"]]
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Erdős–Rényi Network", cex=0.6)
+mtext("(matching Astrobiology Post-Set node & edge count)", cex=0.9)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Erdős–Rényi Network", cex=0.6)
+mtext("(matching Astrobiology Post-Set node & edge count)", cex=0.9)
+```
+
+The essentially uniform nature of an Erdős–Rényi network means that there is a tendency for the measures to correlate that would not be observed in a network where there is differentiation. For example, it is conceivable that real-world social networks would have people whose betweenness centrality is higher than the norm but whose eigenvector centrality is lower, and _vice versa_.
+
+The equivalent plots for the Whole-Thread (threshold=3) case, which has the same number of nodes (`r WholeT3["astro","nodes"]`) but fewer ties (`r WholeT3["astro","edges"]` compared to `r as.character(PSet["astro","edges"])`), illustrates the non-independence of the measures while also showing it to be less well-defined.
+
+```{r  fig.width=4, fig.height=4.5, echo=FALSE, results='hold', warning=FALSE}
+sim<-data_WT3PS[["astro"]][["sim_wt"]]
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_degree"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("degree")), main="Simulated Erdős–Rényi Network", cex=0.6)
+mtext("(matching Astrobiology Whole-Thread node & edge count)", cex=0.9)
+plot(sim[,"sqrt_betweenness"],sim[,"sqrt_eigenvector"], xlab=expression(sqrt("betweenness")), ylab=expression(sqrt("eigenvector")), main="Simulated Erdős–Rényi Network", cex=0.6)
+mtext("(matching Astrobiology Whole-Thread node & edge count)", cex=0.9)
+```
+
+Since these are single simulated networks, they show random variation that would differ from what would be obtained if the simultion were repeated. They do, however, provide a baseline to qualitatively judge whether or not the observed networks contain structures or other evidence of social process, behavioural patterns, etc. This, in turn, permits the tie models to be evaluated for their ability to illuminate such structures. Since the tie models do not contain rules likely to create artificial structures, any evident structure can be assumed to be real, but subject to limitations of what may be inferred from them as discussed in the description of the tie type models.
+
+#### Observed Networks Under the Tie Models
+
+The three centrality measures are considered for each of the three tie models, with a threshold of three being chosen for the Whole-Thread model as a sensible mid-point between the over-dense nature of the threshold-free case and the rather sparse case when the threshold is four. For some network analysis questions, a higher threshold might be useful to "tune in" to peaks of activity but a side-by-side comparison of the tie models will be aided if the network densities are broadly similar.
+
+Astrobiology is chosen for illustration; consult the parallel coordinate plot to see that it is a reasonable estimate for the median case in terms of the combined set of attributes. The following plots show how each pair of measures correspond for each node (person) in the network. Note that the scales differ between each tie model. The plots corresponding to the simulations appear in the middle of the top and bottom rows, for which `r expression(sqrt("betweenness"))` is the horizontal axis.
+
+```{r echo=FALSE}
+WT<-data_WT3PS[["astro"]][["wt"]][-1]#-1 removes role column
+PS<-data_WT3PS[["astro"]][["pset"]]
+PC<-data_PCPS[["astro"]][["pc"]][-1]
+colnames(WT)<-c("Degree", "Betweenness","Eigenvector")
+colnames(PS)<-c("Degree", "Betweenness","Eigenvector")
+colnames(PC)<-c("Degree", "Betweenness","Eigenvector")
+```
+
+```{r  fig.width=4, fig.height=4.5, echo=FALSE, warning=FALSE, results='hold'}
+plot(PC, main="Poster-Commenter Tie Model", cex=0.6)
+mtext(side=3, "(square root of measures)", line=1.2)
+
+plot(PS, main="Post-Set Tie Model", cex=0.6)
+mtext(side=3, "(square root of measures)", line=1.2)
+
+plot(WT, main="Whole-Thread (3) Tie Model", cex=0.6)
+mtext(side=3, "(square root of measures)", line=1.2)
+```
+
+An aspect of all of these plots is that rather more of the points are distributed towards the lower centrality measures. This is also present in the simulated networks but it is expected to be increased in the observed data since people who ceased to participate during the course are included, although the extent of the effect may be influenced by other factors. A careful inspection of the plots shows, however, that there is a markedly longer tail of higher degree centrality for the  observed data compared to the equivalent simulation. All tie models appear to be capturing at least some element of non-uniform behaviour.
+
+The **Poster-Commenter** tie model indicates a clear correlation between degree and betweenness cenrality measures and a great majority of people with low eigenvector centrality measures. In other words, neither betweenness nor eigenvector centrality is revealing features of interest. Except for the longer tail of degree centrality compared to the simulation, the Poster-Commenter tie model seems to afford little insight into the network structure, although taken by itself we might conclude the actual structure is not far from the baseline.
+
+The **Post-Set** tie model shows a decidedly different relationship between betweenness and degree centrality measures for individuals; there are clearly a number of people with upper-middle levels of degree centrality whose betweenness is low. Thes represent regions in the network where people are locally highly connected but not well embedded in the overall network. One striking feature of the Post-Set plots is the appearance of two subsidiary clusters of people in the eigenvector centrality distribution for the Post-Set model. A similar effect is observed for some of the other courses. These are discussed briefly in a subsequent section; although the Post-Set model does not _prime facie_ appear to introduce false structures, these appear to be artefacts of the method. So, although the Post-Set model appears to give more evidence for non-uniform network structure, questions remain about the extent to which it may give spurious prominence to these elements.
+
+The **Whole-Thread** model shows a similar spread of degree for low betweenness individuals as does Post-Set and an interestingly different pattern of eigenvector centrality to either the simulated cases or the other tie models. There is clearly a lot less dependence between these two centrality measures; Whole-Thread, with a threshold of three, appears to be discrimiating between people who are embedded in highly connected regions from those who connect regions within the network. It does not show the suspected artefacts of Post-Set. The clear correlation between degree and eigenvector centrality suggests that relatively little insight would be gained from using both measures in analysis.
+
+Although caution should be exercised with interpreting correlation coefficients for these statistics (see "Technical Notes", below), they provide an interesting counterpart to the above plots. A value of 0 indicates no correlation and +/-1 indicates pure positive or negative correlation (all points follow a line, which need not be straight). Note that correlation fails to discriminate between quite different betweenness:eigenvector relationship patterns.
+
+```{r echo=FALSE, results="asis"}
+PC_corr<-cor(data_PCPS$astro$pc[,-1], use="complete.obs", method="spearman")
+PS_corr<-cor(data_PCPS$astro$pset, use="complete.obs", method="spearman")
+WT_corr<-cor(data_WT3PS$astro$wt[,-1], use="complete.obs", method="spearman")
+WTsim_corr<- cor(sim<-data_WT3PS$astro$sim_wt, use="complete.obs", method="spearman")
+df<-rbind(
+      t(c("degree:betweenness"=PC_corr["sqrt_degree","sqrt_betweenness"],
+        "degree:eigenvector"=PC_corr["sqrt_degree","sqrt_eigenvector"],
+        "beteenness:eigenvector"=PC_corr["sqrt_betweenness","sqrt_eigenvector"])),
+      
+      t(c("degree:betweenness"=PS_corr["sqrt_degree","sqrt_betweenness"],
+        "degree:eigenvector"=PS_corr["sqrt_degree","sqrt_eigenvector"],
+        "beteenness:eigenvector"=PS_corr["sqrt_betweenness","sqrt_eigenvector"])),
+      
+      t(c("degree:betweenness"=WT_corr["sqrt_degree","sqrt_betweenness"],
+        "degree:eigenvector"=WT_corr["sqrt_degree","sqrt_eigenvector"],
+        "beteenness:eigenvector"=WT_corr["sqrt_betweenness","sqrt_eigenvector"])),
+      
+      
+      t(c("degree:betweenness"=WTsim_corr["sqrt_degree","sqrt_betweenness"],
+        "degree:eigenvector"=WTsim_corr["sqrt_degree","sqrt_eigenvector"],
+        "beteenness:eigenvector"=WTsim_corr["sqrt_betweenness","sqrt_eigenvector"])))
+
+rownames(df)<-c("Poster-Commenter","Post-Set","Whole-Thread(3)","Simulated (W-T)")
+kable(df)
+```
+_Spearman rank correlation values for square root centrality measures_
+
+
+The tentative conclusion drawn from the above is that betweenness centrality and one of degree or eigenvector centrality - using the Whole-Thread tie model with a threshold of three - would provide the most useful parsimonious set of statistics.
+
+### Principal Components - Another View on Dependence
+
+Principal Component Analysis (PCA) is a widely used approach to deal with multiple attributes which may have strong dependency between them. It is commonly used to reduce from many partially-dependent attributes to a smaller number of mutually-independent attributes by taking linear combinations of the original attributes; the linear combinations are ranked according to the extent to which they account for the variation in the data.
+
+In the present case, we do not have a problem that requires this kind of dimensionality reduction but we do have non-independent attributes and an inkling in the above tentative conclusion that only two could be a useful parsimonious set. PCA is used here to summarise non-independence between the centrality measures.
+
+
+
+
+
+ 
+When there are many components, selection often chooses principal components to the left of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables. On the basis of this recipe, we could select one or two principal components for further analysis. This has the distinct disadvantage in that it gives us statistics that are not directly interpretable in terms of ideas such as "degree" or "betweenness". Hence it may be necessary to transform the components back to centrality measure space, or simply to use the centrality measures where their non-independence is not an issue.
+
+### A Closer Look at the Whole-Thread Threshold
+
+### A Closer Look at Clusters in Eigenvector Centrality
 
 
 Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
 
 For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
-
-### Correlation Between Tie Models
-
-### Principal Components - Another View on Dependence
-
-Notes on interpretation:
-* on the whole, we look at PCA here to summarise non-independence between the centrality measures rather than to select primary components.
-* when there are many components, selection often chooses PCs to th eleft of the elbow point in the scree plot. alternatively, PCs with eigenvalues >1 may be selected; these account for more variance than the original variables.
-
-### A Closer Look at the Whole-Thread Threshold
-
-### A Closer Look at Clusters in Eigenvector Centrality
 
 ### Technical Notes
 
@@ -183,6 +282,8 @@ __Individuals who withdrew (were deleted) are not counted; other analysis will r
 Square root transformation is applied to the centrality measures to compress their long-tails.
 
 Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
+
+Spearman rank correlation is used with square root measures; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is more suited to skew distributions and more resistant to the effect of outliers than Pearson's but the centrality measures cannot be assumed to conform to the assumptions of the correlation method. It should not be assumed that coefficients are quantitatively meaningful. 
 
 For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Square root measures are used as before.
 
