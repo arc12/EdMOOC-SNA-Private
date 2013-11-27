@@ -17,7 +17,7 @@ td {
 ```{r echo=FALSE, results='hide'}
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
 # threshold for minimum number of contributions to a thread by a person for them to be included
-thd.thresh<-3
+thd.thresh<-4 #numeric or use "" for no threshold (accident of history)
 group<-thd.thresh
 tie.type="Whole-T" #filename prefix
 echo.flag<-TRUE #echo R source

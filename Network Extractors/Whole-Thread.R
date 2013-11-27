@@ -21,7 +21,7 @@ source("./dbConnect.R")
 source("./helpers.R")
 
 # threshold for minimum number of contributions to a thread by a person for them to be included
-thd.thresh<-3
+thd.thresh<-2
 
 courseIDs<-c("aiplan","astro","crit","edc","equine","intro")
 #which forum IDs indicate an "introductions and interests" forum

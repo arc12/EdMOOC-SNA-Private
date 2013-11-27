@@ -40,6 +40,7 @@ for(i in 1:length(courseIDs)){
    #    #graph level degree centrality is normalised relative to the max possible for #nodes and #vertices
    one.row<-c(nodes=vcount(igraphList[[i]]),
       ecount(igraphList[[i]]),
+      sum(degree(igraphList[[i]])==0),
       1000*graph.density(igraphList[[i]], loops=FALSE),
       diameter(igraphList[[i]]),
       centralization.degree(igraphList[[i]], mode="all", loops=FALSE, normalized=TRUE)$centralization,
@@ -58,9 +59,9 @@ for(i in 1:length(courseIDs)){
    singles.df<-rbind(singles.df,one.row)
 }
 if(directed.net){
-   colnames(singles.df)<-c("nodes","edges","graph density*1000","diameter","degree","closeness","betweenness","in degree","out degree","mutual dyads","asymmetric dyads")
+   colnames(singles.df)<-c("nodes","edges","isolates","graph density*1000","diameter","degree","closeness","betweenness","in degree","out degree","mutual dyads","asymmetric dyads")
 }else{
-   colnames(singles.df)<-c("nodes","edges","graph density*1000","diameter", "degree","closeness","betweenness")
+   colnames(singles.df)<-c("nodes","edges","isolates","graph density*1000","diameter", "degree","closeness","betweenness")
 }
 row.names(singles.df)<-courseIDs
 
