@@ -26,9 +26,7 @@ Background
 -------
 ### Structure of the Forums
 
-In the Coursera courses run from January 28^th 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment. Similarly, it is likely that a reply to a post appears as a new post in the thread; the absence of a comment in the foums data does not mean no-one commented or replied. Given the structure of the forums, it would be likely that a reply to the first post in a thread would appear as a new post. In short: both comments and posts may be used to reply to a previous post or comment.
-
-?? how frequent is it for the 1st reply to the post that starts a thread appears as a post and NOT as a comment ??
+In the Coursera courses run from January 28^th 2013, the forums are structured in the following hierarchical pattern. Each course contains several forums, which may be hierarchically arranged, within which there are typically many threads. Both forums and threads have a title but no content. Forum posts always appear in threads and may have any number of comments attached. There is no hierarchical structure in the comments, hence it is not possible to determine from the data whether a comment is in reply to the post it is associated with, or is in reply to a previous comment. Similarly, it is likely that a reply to a post appears as a new post in the thread; the absence of a comment in the foums data does not mean no-one actually commented or replied. Given the structure of the forums, it would be likely that a reply to the first post in a thread would appear as a new post. In short: both comments and posts may be used to reply to a previous post or comment.
 
 Data on what people read in the forums is only recorded at the level of the thread; it is not possibe to determine which of the various posts in a given thread were actually read, if any.
 
@@ -87,6 +85,8 @@ load(file="Whole-T 4.RData")
 WholeT4<-singles.df
 load(file="Whole-T 3.RData")
 WholeT3<-singles.df
+load(file="Whole-T 2.RData")
+WholeT2<-singles.df
 load(file="P-Set.RData")
 PSet<-singles.df
 load(file="P-C.RData")
@@ -98,7 +98,7 @@ rm(singles.df)
 The density figures for each course with each of the three tie models, and with two different thresholds used for Whole-Thread in addition to a no-threshold run, are shown below. The density, here expressed as a percentage, is the proportion of the total possible ties that are observed. The number of nodes is the same across all tie models because all people who made a post or comment are always used.
 
 ```{r echo=FALSE, results="asis"}
-df<-cbind("No. nodes"=PC[,"nodes"],"P-C Density/%"=PC[,"graph density*1000"]/10,"P-Set Density/%"=PSet[,"graph density*1000"]/10, "W-T Density/% (Thresh=3)"=WholeT3[,"graph density*1000"]/10, "W-T Density/% (Thresh=4)"=WholeT4[,"graph density*1000"]/10, "W-T Density/%"=WholeT[,"graph density*1000"]/10)
+df<-cbind("No. nodes"=PC[,"nodes"],"P-C Density/%"=PC[,"graph density*1000"]/10,"P-Set Density/%"=PSet[,"graph density*1000"]/10, "W-T Density/% (Thresh=4)"=WholeT4[,"graph density*1000"]/10, "W-T Density/% (Thresh=3)"=WholeT3[,"graph density*1000"]/10, "W-T Density/% (Thresh=2)"=WholeT2[,"graph density*1000"]/10, "W-T Density/%"=WholeT[,"graph density*1000"]/10)
 rownames(df)<-rownames(PC)
 kable(df)
 ```
@@ -110,19 +110,19 @@ The Whole-Thread model with no threshold produces networks of exceptionally high
 
 The following parallel coordinate plot shows how each of the density measures and the number of nodes vary for each course, with each quantity being separately scaled and fit within the vertical range of the plot. This appears to show that there may be a secondary effect of network size on density; course with more participants do generally have a lower density in the Poster-Commenter tie model. If AI Planning (red line) is discounted, however, the aparrent pattern does not appear.
 
-The parallel coordinate plot is useful because it shows whether the different courses are similarly placed as the tie model changes, i.e. that we would be likely to draw similar conclusions independent of the tie model. The Whole-Thread tie model without a threshold is clearly at odds with the general pattern. The Post-Set and Whole-Thread tie models with a threshold are reasonably similar, and with the exception of AI planning, also similar to Poster-Commenter. It might be tentatively suggested that this difference is grounded in different behaviour in the forums; AI Planning participants may have more explicitly commented-on posts.
-
-
-
 ```{r fig.width=6, fig.height=5, echo=FALSE}
 library(MASS)
 df.<-df
-colnames(df.)<-c("nodes","P-C","P-Set","W-T(3)","WT(4)","WT")
+colnames(df.)<-c("nodes","P-C","P-Set","WT(4)","W-T(3)","W-T(2)","WT")
 opar<-par(mar=c(5.1, 4.1, 4.1, 5.1), xpd=TRUE)
-parcoord(df., col=rainbow(length(df[,1])), cex=0.5, main="Parallel Coordinate Plot")
+parcoord(df., col=rainbow(length(df[,1])), cex=0.5, main="Node Count and Relative Density")
 legend("topright",  inset=c(-0.15,0), legend=rownames(df), fill=rainbow(6), cex=0.7)
 par(opar)
 ```
+
+The parallel coordinate plot is useful because it shows whether the different courses are similarly placed as the tie model changes, i.e. that we would be likely to draw similar conclusions independent of the tie model. The Whole-Thread tie model without a threshold is most visibly at odds with the general pattern but the relative density values between courses with a threshold of two are similar to it. A tentative conclusion might be that if network structure is sought, using Whole-Thread with a threshold of 2 may be subject to the same "washing-out" problem as without a threshold, even though the absolute value densities are less than 1%.
+
+The Post-Set and Whole-Thread tie models with a threshold are reasonably similar, and with the exception of AI planning, also similar to Poster-Commenter. It might be tentatively suggested that this difference is grounded in different behaviour in the forums; AI Planning participants may have more explicitly commented-on posts.
 
 In summary: at the network level, all of the tie models appear to be acceptable with the exception of Whole-Thread without a threshold. The Poster-Commenter model stands slightly apart from the other tie models and may be usefully discriminating some directed commenting behaviour, consistent with its definition.
 
@@ -211,9 +211,9 @@ plot(WT, main="Whole-Thread (3) Tie Model", cex=0.6)
 mtext(side=3, "(square root of measures)", line=1.2)
 ```
 
-An aspect of all of these plots is that rather more of the points are distributed towards the lower centrality measures. This is also present in the simulated networks but it is expected to be increased in the observed data since people who ceased to participate during the course are included, although the extent of the effect may be influenced by other factors. A careful inspection of the plots shows, however, that there is a markedly longer tail of higher degree centrality for the  observed data compared to the equivalent simulation. All tie models appear to be capturing at least some element of non-uniform behaviour.
+An aspect of all of these plots is that rather more of the points are distributed towards the lower centrality measures. This is also present in the simulated networks but it is expected to be increased in the observed data since people who ceased to participate during the course are included, although the extent of the effect may be influenced by other factors. A careful inspection of the plots shows, however, that there is a markedly longer tail of higher degree centrality for the  observed data compared to the equivalent simulation. All tie models appear to be capturing at least some element of non-uniform behaviour. The longer tail relative to the simulated network may simply arise from the fact that the simulation used the mean network density of the observed data; this mean is made low by the presence of people who stopped participating.
 
-The **Poster-Commenter** tie model indicates a clear correlation between degree and betweenness cenrality measures and a great majority of people with low eigenvector centrality measures. In other words, neither betweenness nor eigenvector centrality is revealing features of interest. Except for the longer tail of degree centrality compared to the simulation, the Poster-Commenter tie model seems to afford little insight into the network structure, although taken by itself we might conclude the actual structure is not far from the baseline.
+The **Poster-Commenter** tie model indicates a clear correlation between degree and betweenness cenrality measures and a great majority of people with low eigenvector centrality measures. In other words, neither betweenness nor eigenvector centrality is revealing features of interest. Except for the longer tail of degree centrality compared to the simulation, the Poster-Commenter tie model seems to afford little insight into the network structure, although taken by itself we might conclude the actual structure is not far from the baseline. 
 
 The **Post-Set** tie model shows a decidedly different relationship between betweenness and degree centrality measures for individuals; there are clearly a number of people with upper-middle levels of degree centrality whose betweenness is low. Thes represent regions in the network where people are locally highly connected but not well embedded in the overall network. One striking feature of the Post-Set plots is the appearance of two subsidiary clusters of people in the eigenvector centrality distribution for the Post-Set model. A similar effect is observed for some of the other courses. These are discussed briefly in a subsequent section; although the Post-Set model does not _prime facie_ appear to introduce false structures, these appear to be artefacts of the method. So, although the Post-Set model appears to give more evidence for non-uniform network structure, questions remain about the extent to which it may give spurious prominence to these elements.
 
@@ -271,7 +271,7 @@ These principal components account for `r paste(paste(round(100 * (pca$sdev^2)/s
 
 The following plot shows how individuals are distributed according to the first two primary components. It also shows in red how the centrality measures relate to these two primary components, providing a more visual means of interpreting the previous table.
 ```{r fig.width=5, fig.height=6, echo=FALSE}
-biplot(pca, xlabs = rep("+", length(data_WT3PS$astro$wt[,1])), cex = 0.7, main = "The First Two Principle Components", sub="Whole-Thread with threshold=3")
+biplot(pca, xlabs = rep("+", length(data_WT3PS$astro$wt[,1])), cex = 0.7, main = "The First Two Principal Components", sub="Whole-Thread with threshold=3")
 ```
 
 The red vectors emphasise the previously-made comment about betweenness centrality standing relatively distinct from the more-similar other two measures and might suggest that the best choice of two centrality measures out of the three would be degree and betweenness since these most closely align with the first two principal components. The weakness with this approach is that the centrality measures are not independent. An alternative approach, which would be useful when the non-independence is an issue, would be to use PCA1 and PCA2 for further analysis, since together they account for 95% of variance. This has the distinct disadvantage in that it gives us statistics that are not directly interpretable in terms of well-known ideas such as "degree" or "betweenness". Hence it may be necessary to transform the components back to centrality measure space.
@@ -279,42 +279,72 @@ The red vectors emphasise the previously-made comment about betweenness centrali
 
 ### A Closer Look at the Whole-Thread Threshold
 
+The question of threshold choice is analogous to choosing a height to designate something a mountain, when deciding whether or not a region is mountainous. If the threshold is set too low, the process is insufficiently discriminating and a region with many rolling hills could appear to be more mountainous than the alps. In both the analogy and the case of the Whole-Thread tie model, there is an element of subjectivity and a necessity to consider the purpose at hand.
+
+A high threshold will naturally identify the structures created by the most active course participants, for whom we can have the most confidence that the network is representative of their behaviour. The consequence, however, is that many participants effectively vanish because they are not connected in a high-threshold network. A low threshold includes people with less activity but leads to a network that may be a less reliable representation of behaviour simply because there are fewer data points.
+
+```{r echo=FALSE, results="asis"}
+dfi<-cbind("No. nodes"=WholeT4[,"nodes"], 
+           "Threshold=4 Isolates/%"=100*WholeT4[,"isolates"]/WholeT4[,"nodes"],
+           "Threshold=3 Isolates/%"=100*WholeT3[,"isolates"]/WholeT3[,"nodes"],
+           "Threshold=2 Isolates/%"=100*WholeT2[,"isolates"]/WholeT2[,"nodes"],
+           "No Threshold Isolates/%"=100*WholeT[,"isolates"]/WholeT[,"nodes"])
+rownames(dfi)<-rownames(WholeT4)
+kable(dfi)
+```
+_Proportion of forum contributors without ties for different threshold levels in the Whole-Thread tie model._
+
+For the degenerate no-threshold case, isolates are people who only posted to a thread that never received any further contributions. All courses show essentially the same progression as the threshold is increased with similar change moving from four to three, and from three to two. This suggests that threshold values from two upwards can be used for progressive attenuation of less significant structure.
+
+The previous observations lead to the intuition that the threshold should be set at the largest value which does not exclude too many people in the view of the investigator, taking into account the purpose of the investigation. Three example fragment sociograms appear below for the Astrobiology course. Nodes are colour-coded according to geographical region (unfortunately the colours are assigned automatically by Gephi so do not match between diagrams, but the equivalent region is shown). In this case, the majority colour indicates a participant from South America. Isolates are hidden and the plots are shown in progressive order of threshold from two to four.
+
+![Astrobiologt W-T 2 Coloured by Region](gephi output/Astro WT2 Region.png)
+![Astrobiologt W-T 3 Coloured by Region](gephi output/Astro WT3 Region.png)
+![Astrobiologt W-T 4 Coloured by Region](gephi output/Astro WT4 Region.png)
+
+In this particular case the use of different threshold levels shows a community with both core and connecting members almost exclusively coming from South America. A threshold of two is sufficient to discern the network sub-structure while the higher thresholds demonstrate the extent of cohesion.
 ### A Closer Look at Clusters in Eigenvector Centrality
 
+Several of the eigenvector centrality plots show one or two separated clusters for Post-Set, while the same is not observed for other tie models. The following diagram shows individuals from the Astrobiology course using the Post-Set tie model for whom degree>=25, colour coded to show highest eigenvector centrality. It highlights individuals in the most extreme of the two islands in the previous scatter plots of eigenvector centrality against degree.
 
-Several of the eigenvector centrality plots show one or two separated clusters for P-Set. Looking at astro, the members of its high-evCent cluster are all connected to each other. It is obvious that there is a range of degree and betweenness centrality for most, although degree is fairly well confined for some, so a simple explanation doesn't present itself. Need to investigate further. Could these be a cluster of commenters on a post by a particularly well-connected individual?
+![Astrobiology Post-Set Degree>=25 colour coded to show highest eigenvector centrality](gephi output/Astro P-Set EV.png)
 
-For reference: an individual with no ties in aiplan gets an eigenvector centrality of '0.0115211' for P-C. This null value decreases for P-Set and with the larger networks of other courses.
-
+Both Post-Set and Whole-Thread have an intrinsic bias in that popular posts or threads (respectively) tend to multiply the number of ties by $N(N-1)/2$, where $N$ is the number of contributors. This can make regions of the network appear to be more connected than may be sensible; it can make for small "hot-spot" areas of eigenvector centrality. Individuals who contribute to more than one such hot-spot can gain particularly high eigenvector centrality by aparrently being connected to many highly central individuals. The Whole-Thread threshold compensates for this effect by proportionally decreasing the number of contributions that qualify for inclusion in the process by which ties are decided such that, although the maximum values of eigenvector centrality are similar between these two tie models, it avoids what is essentially accidental over-heating.
 
 Conclusions
 ---------
 
+It is not realistic to expect that meaningful social network statistics can be found for people who participate little in social activity. The aim of discriminating between different behavioural patterns among those who do participate is appropriate when selecting tie models and centrality measures. For the current data sets, this typically means that only a few percent of the people who started a course have meaningful social network statistics, a consequence of non-persistence with the course or low engagement with the forums. At the lower levels of participation, a simple count of post or comment contributions is likely to be a more reliable measure than social network statistics, although less semantically rich.
+
 ### Selection of Tie Model and Centrality Measure
 
-### Character of the Networks
+Of the various approaches explored, the following have been found to be generally unpromising:
+* Poster-Commenter is most badly affected by the fact that practical use of the forums does not capture the essential idea of "in-reply-to". The Poster-Commenter tie model does not expose interesting network structure except that it might permit reciprocity to be identified.
+* Post-Set is less badly affected but still fails to expose interesting structure and appears to be subject to artefacts in eigenvector centrality.
+* Whole-Thread without a threshold leads to a near-degenerate network with too many ties to be discriminating, and a notably long time required to compute network statistics.
 
-### Alternatives
+Factors in favour of the whole-thread tie model with a threshold:
+* The post/comment distinction is abandoned so the tie model is a better match with the semantics of the data.
+* The lower levels of internal correlation between degree and eigenvector, and betweeness centrality indicates that the social positions of individuals in the network are being differentiated.
+* Since forum reading is recorded only at thread level, a thread-centric tie model makes for more straight-forward comparison of contribution and lurking.
+* The threshold can be used as a "tuning parameter", with values of two or three found to be most useful in the current case.
 
-weighted Whole-Thread
+In general use, only degree or eigenvector, and betweenness centrality are able to distinguish the differing network positions of individuals but where independent attributes are desirable, the first two principal components may be more useful, although not directly interpretable in terms of widely understood network analysis terminology.
 
-Bipartitie thread:person
+### Alternative
 
+An alternative approach to the tie models discussed above may be worthy of further study; an adaptation of the Whole-Thread tie model with threshold to have different weightings for the ties. The model presented above uses binary ties, which have a value of 1 no matter how many different threads connect two people. A weighted tie model could use the number of threads to give a value to ties that would be accounted for in centrality measure calculation. This would allow a lower threshold to be used, bringing more people into the network, while still differentiating between different levels of participation.
 
 Technical Notes
 --------
 
-Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. People who withdrew do not appear.
+Data for the whole course run is used. This means that we should expect people who dropped out but who did not withdraw to have low centrality measures. Individuals who withdrew (were deleted) are not counted; geographical region, role, and other potentially-relevant information is not available for these people.
 
-__Individuals who withdrew (were deleted) are not counted; other analysis will rely on role information, which is not available for these people (although it could be imputed as access_group_id=4).__
+Isolates are removed when examining correlation. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
 
-Square root transformation is applied to the centrality measures to compress their long-tails.
+Square root transformation is applied to the centrality measures to compress their long-tails and Spearman rank correlation is used; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is more suited to skew distributions and more resistant to the effect of outliers than Pearson's but the centrality measures cannot be assumed to conform to the assumptions of the correlation method. It should not be assumed that coefficients are quantitatively meaningful. 
 
-Isolates are removed. Specifically, isolates in "post-set" are removed. These are people who post and who got no comments, and never comment on anyone else's posts. There may be quite a lot of these and including them distorts attempts to assess correlation.
-
-Spearman rank correlation is used with square root measures; a non-linear but monotonic relationship will appear as a correlation. Spearman rank correlation is more suited to skew distributions and more resistant to the effect of outliers than Pearson's but the centrality measures cannot be assumed to conform to the assumptions of the correlation method. It should not be assumed that coefficients are quantitatively meaningful. 
-
-For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Square root measures are used as before.
+For the Principal Component Analysis, the variance is normalised to 1 for each variable before finding the principal components. Isolates are removed and square root measures are used as before.
 
 ### Reference Material
 
