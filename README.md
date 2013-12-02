@@ -18,9 +18,13 @@ Basic Forum Stats
 
 Looks at macro-level stats for forums per course: aggregate descriptive quantities and high level structural features. Some of this also appears in the 1st MOOC Report; this is partially a database familiarisation activity augmented by some processing to get some more basic numbers to inform next-steps and contextualise results.
 
+**STATUS: bug to fix, no further plans.**
+
 ## Regional Differences
 
-Looks across forums and inspects regional differences.
+Looks across forums and inspects regional differences. Currently looks only at post-counts.
+
+**STATUS: Some plots need smartening (labels). Could also improve by indicating significance of differences to the plots. Needs interpretation/story. Possible extension to "reads" and/or to modify from couting posts to contributions (posts+comments)**
 
 Dark Users
 ----------
@@ -29,10 +33,14 @@ Quantify the extent to which user identifiers left in activity traces (forums so
 
 At present, it considers forum_user_ids in threads, posts and comments.
 
+**STATUS: no further plans**
+
 Network Extractors
 -----------------
 
 Contains code to build networks based on different assumptions of what a tie is. These are plain R code and output - for each course separately - .RData containing the network (using the data structure from the "network" package) and a graphml file (created using the "igraph" package). Gephi can consume the graphml file, or it may be read in using the igraph package. NB igraph and network packages are not mutually compatible.
+
+**STATUS: no further plans, although weighted whole-thread may be worth exploring (see Tie Type Comparison Synthesis)**
 
 ### Poster-Commenter Network
 
@@ -42,15 +50,23 @@ The assumption of the following that a tie between individuals is defined by a c
 
 An undirected graph where a poster and all commenters have mutual ties.
 
+### Whole-thread with threshold
+
+All contributors (comments or posts) to a thread are considered tied if both parties make a minimum (threshold) number of contributions.
+
 Describe Net
 ------------
 
-Network level summary statistics. Can use Poster-Commenter and Post-Set
+Network level summary statistics. Can use Poster-Commenter and Post-Set.
+
+**STATUS: essentially complete. P-C and P-Set need to have "no I" added. Needs an interpretation/story.**
 
 Describe One User
 -----------
 
 Single user focus in a "poster-commenter" tie model. Shows their proximal network and the posts/comments that led to it. Role and region shown.
+
+**STATUS: Not up to date with latest view of tie models. This may get resurrected.**
 
 Top Subnets
 -----------
@@ -59,22 +75,40 @@ Extract and visualise subnets defined by the highest individual-level network st
 
 Currently only in/out degree (and for P-C networks)
 
-Tie Type Centrality Comparison
+**STATUS: Not up to date with latest view of tie models. This may get resurrected.**
+
+Tie Type Comparison
 ------------
 
+### Tie Type Correlation
+
 Inspects networks defined by different tie types and looks for correlation etc. In other words: how similar do the centrality measures for different tie types appear to be?
+
+**STATUS: no further work planned.**
+
+### Tie Type Correlation Synthesis
+
+An account of the tie models and centrality measures, exploring "what makes a good model" etc.
+
+**STATUS: no further work planned.**
 
 Forum Read Extract
 -------------
 
 Gets the peculiar key/value data and builds a MySQL table more suited to SQL access.
 
+**STATUS: completed. Would be adaptible to quiz accesses in "kvm_course.ccc"**
+
 Forum Attribute Patterns
 -----------
 
 Correlation, clustering and PCA experiments. Forum and thread-level investigation so far. Posts in progress.
 
+**STATUS: Needs a thorough review to decide whether there is anything needed here, whether there are any insights to report.**
+
 ERGM Models
 --------------------
 
 Apply the ERGM approach to a network....
+
+**STATUS: incomplete and early work. Revisit using Whole-Thread tie model.**
