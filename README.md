@@ -111,4 +111,4 @@ ERGM Models
 
 Apply the ERGM approach to a network....
 
-**STATUS: incomplete and early work. Revisit using Whole-Thread tie model.**
+**STATUS: incomplete and early work. Revisit using Whole-Thread tie model. Also add various attributes.**
